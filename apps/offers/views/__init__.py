@@ -1,0 +1,1 @@
+"""Offers views package."""
