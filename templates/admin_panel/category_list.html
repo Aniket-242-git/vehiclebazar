@@ -1,0 +1,23 @@
+{% extends "admin_panel/model_list.html" %}
+{% block table_head %}
+  <th style="width:64px;">Image</th><th>Name</th><th>Slug</th><th>Vehicles</th><th>Status</th><th>Created</th>
+{% endblock %}
+{% block table_row %}
+  <tr>
+    <td>
+      {% if item.image %}<img src="{{ item.image.url }}" alt="" class="rounded" width="48" height="36" style="object-fit:cover;">
+      {% else %}<span class="badge text-bg-light border"><i class="bi bi-image"></i></span>{% endif %}
+    </td>
+    <td class="fw-semibold">{{ item.name }}</td>
+    <td><code class="small">{{ item.slug }}</code></td>
+    <td><span class="badge text-bg-secondary">{{ item.vehicle_count }}</span></td>
+    <td>{% if item.is_active %}<span class="badge text-bg-success">Active</span>{% else %}<span class="badge text-bg-danger">Inactive</span>{% endif %}</td>
+    <td class="small text-muted">{{ item.created_at|date:"M j, Y" }}</td>
+    <td class="text-end text-nowrap">
+      <a href="/admin-panel/categories/{{ item.pk }}/edit/" class="btn btn-sm btn-outline-primary" title="Edit"><i class="bi bi-pencil"></i></a>
+      <form method="post" action="/admin-panel/categories/{{ item.pk }}/delete/" class="d-inline" onsubmit="return confirm('Delete category {{ item.name }}? Vehicles using it must be moved first.');">
+        {% csrf_token %}<button class="btn btn-sm btn-outline-danger" title="Delete"><i class="bi bi-trash"></i></button>
+      </form>
+    </td>
+  </tr>
+{% endblock %}

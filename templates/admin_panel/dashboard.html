@@ -6,7 +6,8 @@
     <h4 class="fw-bold mb-0">Marketplace Dashboard</h4>
     <p class="text-secondary small mb-0">Overview of listings, enquiries and offers.</p>
   </div>
-  <a href="/django-admin/" class="btn btn-dark btn-sm"><i class="bi bi-sliders me-1"></i>Full Admin (CRUD)</a>
+  <a href="/admin-panel/vehicles/add/" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg me-1"></i>Add Vehicle</a>
+  <a href="/django-admin/" class="btn btn-outline-dark btn-sm"><i class="bi bi-sliders me-1"></i>Advanced (Django Admin)</a>
 </div>
 
 <!-- Stat cards -->
@@ -73,7 +74,7 @@
     <div class="card border-0 shadow-sm h-100">
       <div class="card-header bg-white d-flex justify-content-between align-items-center">
         <span class="fw-semibold"><i class="bi bi-clock-history me-1"></i>Recently Added Vehicles</span>
-        <a href="/django-admin/vehicles/vehicle/" class="btn btn-sm btn-outline-primary">Manage</a>
+        <a href="/admin-panel/vehicles/" class="btn btn-sm btn-outline-primary">Manage</a>
       </div>
       <div class="table-responsive">
         <table class="table table-hover align-middle mb-0">
@@ -95,7 +96,7 @@
               </tr>
             {% empty %}
               <tr><td colspan="4" class="text-center text-secondary py-4">No vehicles yet.
-                <a href="/django-admin/vehicles/vehicle/add/">Add your first vehicle</a>.</td></tr>
+                <a href="/admin-panel/vehicles/add/">Add your first vehicle</a>.</td></tr>
             {% endfor %}
           </tbody>
         </table>
@@ -136,7 +137,7 @@
 <div class="alert alert-warning mt-4 d-flex justify-content-between align-items-center flex-wrap gap-2">
   <span><i class="bi bi-megaphone me-1"></i><strong>Offer modal is live:</strong> “{{ live_offer.title }}”
     {% if live_offer.end_date %}(till {{ live_offer.end_date|date:"d M Y, H:i" }}){% endif %}</span>
-  <a href="/django-admin/offers/offer/{{ live_offer.pk }}/change/" class="btn btn-sm btn-warning">Edit offer</a>
+  <a href="/admin-panel/offers/{{ live_offer.pk }}/edit/" class="btn btn-sm btn-warning">Edit offer</a>
 </div>
 {% endif %}
 {% endblock %}
