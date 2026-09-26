@@ -1,0 +1,71 @@
+{% extends "admin_panel/base.html" %}
+{% block title %}Create New Admin{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-8 col-lg-6">
+    <div class="card shadow-sm">
+      <div class="card-header bg-white"><h5 class="mb-0"><i class="bi bi-person-plus me-2"></i>Create New Admin</h5></div>
+      <div class="card-body">
+        {% if not creation_enabled %}
+          <div class="alert alert-warning">
+            <i class="bi bi-exclamation-triangle me-1"></i>
+            Admin creation is currently disabled. Set <code>ADMIN_CREATION_CODE</code>
+            in the server <code>.env</code> file (see <code>.env.example</code>) to enable it.
+          </div>
+        {% endif %}
+        <form method="post" novalidate>
+          {% csrf_token %}
+          {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label" for="id_username">Username *</label>
+              {{ form.username }}
+              {% for e in form.username.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="id_email">Email</label>
+              {{ form.email }}
+              {% for e in form.email.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="id_first_name">First name</label>
+              {{ form.first_name }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="id_last_name">Last name</label>
+              {{ form.last_name }}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="id_password1">Password *</label>
+              {{ form.password1 }}
+              {% for e in form.password1.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="id_password2">Confirm password *</label>
+              {{ form.password2 }}
+              {% for e in form.password2.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}
+            </div>
+            <div class="col-12">
+              <label class="form-label" for="id_creation_code">Admin creation code *</label>
+              {{ form.creation_code }}
+              <div class="form-text">{{ form.fields.creation_code.help_text }}</div>
+              {% for e in form.creation_code.errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}
+            </div>
+            <div class="col-12 form-check ms-2">
+              {{ form.make_superuser }}
+              <label class="form-check-label" for="id_make_superuser">{{ form.make_superuser.label }}</label>
+              <div class="form-text">{{ form.fields.make_superuser.help_text }}</div>
+            </div>
+          </div>
+          <div class="mt-4">
+            <button type="submit" class="btn btn-dark" {% if not creation_enabled %}disabled{% endif %}>
+              <i class="bi bi-person-plus me-1"></i>Create Admin
+            </button>
+            <a href="{% url 'admin_profile' %}" class="btn btn-outline-secondary">Cancel</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
