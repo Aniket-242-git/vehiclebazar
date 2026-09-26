@@ -1,0 +1,36 @@
+{% load static %}
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm sticky-top">
+  <div class="container">
+    <a class="navbar-brand fw-bold" href="{% url 'home' %}">
+      <i class="bi bi-car-front-fill text-warning me-1"></i>{{ SITE_NAME }}
+    </a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="mainNav">
+      <ul class="navbar-nav mx-auto">
+        <li class="nav-item"><a class="nav-link" href="{% url 'home' %}">Home</a></li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'vehicle_list' %}">Vehicles</a></li>
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">Categories</a>
+          <ul class="dropdown-menu">
+            {% for cat in nav_categories %}
+              <li><a class="dropdown-item" href="{% url 'category_page' cat.slug %}">{{ cat.name }}</a></li>
+            {% empty %}
+              <li><a class="dropdown-item" href="{% url 'categories' %}">All categories</a></li>
+            {% endfor %}
+          </ul>
+        </li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'about' %}">About Us</a></li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'contact_us' %}">Contact</a></li>
+      </ul>
+      <form class="d-flex ms-lg-3" action="{% url 'vehicle_list' %}" method="get" role="search">
+        <div class="input-group input-group-sm">
+          <input class="form-control" type="search" name="q" placeholder="Search cars, brands…"
+                 value="{{ request.GET.q|default:'' }}" aria-label="Search vehicles">
+          <button class="btn btn-warning" type="submit"><i class="bi bi-search"></i></button>
+        </div>
+      </form>
+    </div>
+  </div>
+</nav>

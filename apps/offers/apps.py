@@ -1,0 +1,8 @@
+"""Offers app configuration."""
+from django.apps import AppConfig
+
+
+class OffersConfig(AppConfig):
+    default_auto_field = "django.db.models.BigAutoField"
+    name = "apps.offers"
+    verbose_name = "Promotional Offers"
