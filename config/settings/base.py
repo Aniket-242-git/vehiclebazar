@@ -63,6 +63,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "django_filters",
     # Local apps
+    "apps.accounts",
     "apps.vehicles",
     "apps.contacts",
     "apps.offers",
