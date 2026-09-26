@@ -1,0 +1,17 @@
+{% extends "admin_panel/model_list.html" %}
+{% block table_head %}<th>Name</th><th>Slug</th><th>Vehicles</th><th>Status</th><th>Created</th>{% endblock %}
+{% block table_row %}
+  <tr>
+    <td class="fw-semibold">{{ item.name }}</td>
+    <td><code class="small">{{ item.slug }}</code></td>
+    <td><span class="badge text-bg-secondary">{{ item.vehicle_count }}</span></td>
+    <td>{% if item.is_active %}<span class="badge text-bg-success">Active</span>{% else %}<span class="badge text-bg-danger">Inactive</span>{% endif %}</td>
+    <td class="small text-muted">{{ item.created_at|date:"M j, Y" }}</td>
+    <td class="text-end text-nowrap">
+      <a href="/admin-panel/brands/{{ item.pk }}/edit/" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></a>
+      <form method="post" action="/admin-panel/brands/{{ item.pk }}/delete/" class="d-inline" onsubmit="return confirm('Delete brand {{ item.name }}?');">
+        {% csrf_token %}<button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+      </form>
+    </td>
+  </tr>
+{% endblock %}

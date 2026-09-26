@@ -1,0 +1,97 @@
+{% extends "admin_panel/model_list.html" %}
+{% block list_filters %}
+<div class="card border-0 shadow-sm mb-3">
+  <div class="card-body py-2 d-flex flex-wrap gap-2 align-items-center">
+    <form method="get" class="d-flex flex-wrap gap-2 align-items-center">
+      {% if q %}<input type="hidden" name="q" value="{{ q }}">{% endif %}
+      {% if sort %}<input type="hidden" name="order" value="{{ sort }}">{% endif %}
+      <select name="status" class="form-select form-select-sm" style="width:auto;" onchange="this.form.submit()">
+        <option value="">All statuses</option>
+        {% for value, label in statuses %}
+          <option value="{{ value }}" {% if value == status_filter %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+      <select name="category" class="form-select form-select-sm" style="width:auto;" onchange="this.form.submit()">
+        <option value="">All categories</option>
+        {% for c in categories %}
+          <option value="{{ c.pk }}" {% if c.pk|stringformat:"s" == cat_filter %}selected{% endif %}>{{ c.name }}</option>
+        {% endfor %}
+      </select>
+      <select name="flag" class="form-select form-select-sm" style="width:auto;" onchange="this.form.submit()">
+        <option value="">All listings</option>
+        <option value="featured" {% if flag_filter == 'featured' %}selected{% endif %}>Featured only</option>
+        <option value="inactive" {% if flag_filter == 'inactive' %}selected{% endif %}>Inactive only</option>
+      </select>
+      <select name="order" class="form-select form-select-sm" style="width:auto;" onchange="this.form.submit()">
+        <option value="">Sort: Newest</option>
+        <option value="oldest" {% if sort == 'oldest' %}selected{% endif %}>Oldest</option>
+        <option value="price_low" {% if sort == 'price_low' %}selected{% endif %}>Price ↑</option>
+        <option value="price_high" {% if sort == 'price_high' %}selected{% endif %}>Price ↓</option>
+        <option value="title" {% if sort == 'title' %}selected{% endif %}>Title A–Z</option>
+      </select>
+    </form>
+    {% if status_filter or cat_filter or flag_filter or q %}
+      <a href="/admin-panel/vehicles/" class="btn btn-sm btn-link text-danger text-decoration-none"><i class="bi bi-x-circle me-1"></i>Clear filters</a>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+
+{% block table_head %}
+  <th style="width:70px;">Photo</th><th>Vehicle</th><th>Category / Brand</th><th>Price</th>
+  <th>Status</th><th>Flags</th><th>Created</th>
+{% endblock %}
+{% block table_row %}
+  <tr>
+    <td>
+      {% with thumb=item.primary_image %}
+        {% if thumb and thumb.image %}<img src="{{ thumb.image.url }}" alt="" class="rounded" width="56" height="40" style="object-fit:cover;">
+        {% elif item.cover_image %}<img src="{{ item.cover_image.url }}" alt="" class="rounded" width="56" height="40" style="object-fit:cover;">
+        {% else %}<span class="badge text-bg-light border"><i class="bi bi-image"></i></span>{% endif %}
+      {% endwith %}
+    </td>
+    <td>
+      <a href="/admin-panel/vehicles/{{ item.pk }}/edit/" class="fw-semibold text-decoration-none">{{ item.title }}</a>
+      <div class="small text-muted">{{ item.model_name }} · {{ item.manufacturing_year }} · {{ item.km_driven }} km · {{ item.location }}</div>
+    </td>
+    <td class="small">{{ item.category.name }}<br><span class="text-muted">{{ item.brand.name }}</span></td>
+    <td class="text-nowrap">
+      {% if item.has_discount %}
+        <span class="text-success fw-bold">₹{{ item.offer_price|floatformat:0 }}</span>
+        <del class="text-muted small">₹{{ item.price|floatformat:0 }}</del>
+      {% else %}₹{{ item.price|floatformat:0 }}{% endif %}
+    </td>
+    <td>
+      {% if item.status == 'available' %}<span class="badge text-bg-success">Available</span>
+      {% elif item.status == 'sold' %}<span class="badge text-bg-dark">Sold</span>
+      {% elif item.status == 'reserved' %}<span class="badge text-bg-warning">Reserved</span>
+      {% else %}<span class="badge text-bg-secondary">Inactive</span>{% endif %}
+    </td>
+    <td>
+      {% if item.is_featured %}<span class="badge text-bg-info"><i class="bi bi-star-fill me-1"></i>Featured</span>{% endif %}
+      {% if not item.is_active %}<span class="badge text-bg-danger">Hidden</span>{% endif %}
+    </td>
+    <td class="small text-muted">{{ item.created_at|date:"M j, Y" }}</td>
+    <td class="text-end text-nowrap">
+      <a href="/admin-panel/vehicles/{{ item.pk }}/edit/" class="btn btn-sm btn-outline-primary" title="Edit"><i class="bi bi-pencil"></i></a>
+      <div class="btn-group btn-group-sm">
+        <button class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" title="Quick actions"></button>
+        <ul class="dropdown-menu dropdown-menu-end">
+          <li><form method="post" action="/admin-panel/vehicles/{{ item.pk }}/toggle/toggle-active/">{% csrf_token %}<input type="hidden" name="next" value="/admin-panel/vehicles/?page={{ page_obj.number }}&status={{ status_filter }}&category={{ cat_filter }}&flag={{ flag_filter }}&q={{ q|urlencode }}"><button class="dropdown-item"><i class="bi bi-toggle2-on me-2"></i>{% if item.is_active %}Deactivate{% else %}Activate{% endif %}</button></form></li>
+          <li><form method="post" action="/admin-panel/vehicles/{{ item.pk }}/toggle/toggle-featured/">{% csrf_token %}<input type="hidden" name="next" value="/admin-panel/vehicles/?page={{ page_obj.number }}&status={{ status_filter }}&category={{ cat_filter }}&flag={{ flag_filter }}&q={{ q|urlencode }}"><button class="dropdown-item"><i class="bi bi-star me-2"></i>{% if item.is_featured %}Unfeature{% else %}Feature{% endif %}</button></form></li>
+          {% if item.status != 'sold' %}
+          <li><form method="post" action="/admin-panel/vehicles/{{ item.pk }}/toggle/mark-sold/">{% csrf_token %}<input type="hidden" name="next" value="/admin-panel/vehicles/?page={{ page_obj.number }}&status={{ status_filter }}&category={{ cat_filter }}&flag={{ flag_filter }}&q={{ q|urlencode }}"><button class="dropdown-item"><i class="bi bi-check2-circle me-2"></i>Mark as sold</button></form></li>
+          {% else %}
+          <li><form method="post" action="/admin-panel/vehicles/{{ item.pk }}/toggle/mark-available/">{% csrf_token %}<input type="hidden" name="next" value="/admin-panel/vehicles/?page={{ page_obj.number }}&status={{ status_filter }}&category={{ cat_filter }}&flag={{ flag_filter }}&q={{ q|urlencode }}"><button class="dropdown-item"><i class="bi bi-arrow-counterclockwise me-2"></i>Mark available again</button></form></li>
+          {% endif %}
+          <li><hr class="dropdown-divider"></li>
+          <li>
+            <form method="post" action="/admin-panel/vehicles/{{ item.pk }}/delete/" onsubmit="return confirm('Delete vehicle {{ item.title|escapejs }}? This also removes its images.');">
+              {% csrf_token %}<button class="dropdown-item text-danger"><i class="bi bi-trash me-2"></i>Delete</button>
+            </form>
+          </li>
+        </ul>
+      </div>
+    </td>
+  </tr>
+{% endblock %}
