@@ -1,0 +1,221 @@
+{% extends "public/base.html" %}
+{% load static %}
+{% block title %}Browse Vehicles · {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<!-- Page header -->
+<section class="bg-dark text-white py-4">
+  <div class="container d-flex justify-content-between align-items-center flex-wrap gap-2">
+    <div>
+      <h1 class="h4 mb-1 fw-bold">
+        {% if active_category %}{{ active_category.name }} for Sale
+        {% elif params.q %}Search results for “{{ params.q }}”
+        {% else %}All Vehicles{% endif %}
+      </h1>
+      <p class="small text-white-50 mb-0">{{ total_count }} vehicle{{ total_count|pluralize }} found</p>
+    </div>
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb small mb-0">
+        <li class="breadcrumb-item"><a class="link-warning text-decoration-none" href="{% url 'home' %}">Home</a></li>
+        <li class="breadcrumb-item active text-white-50" aria-current="page">Vehicles</li>
+      </ol>
+    </nav>
+  </div>
+</section>
+
+<div class="container py-4">
+  <div class="row g-4">
+
+    <!-- ================= FILTER SIDEBAR ================= -->
+    <aside class="col-lg-3">
+      <div class="card border-0 shadow-sm sticky-lg-top" style="top: 80px;">
+        <div class="card-header bg-white fw-semibold d-flex justify-content-between align-items-center">
+          <span><i class="bi bi-funnel me-1"></i>Filters</span>
+          <a href="{% url 'vehicle_list' %}" class="btn btn-sm btn-link text-danger p-0">Reset</a>
+        </div>
+        <div class="card-body">
+          <form method="get" action="{% url 'vehicle_list' %}" id="filterForm">
+            <input type="hidden" name="sort" value="{{ params.sort }}">
+
+            <div class="mb-3">
+              <label class="form-label small fw-semibold">Search</label>
+              <input type="search" name="q" class="form-control form-control-sm"
+                     value="{{ params.q }}" placeholder="Name, brand, model, city…">
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label small fw-semibold">Category</label>
+              <select name="category" class="form-select form-select-sm">
+                <option value="">All categories</option>
+                {% for c in categories %}
+                  <option value="{{ c.slug }}" {% if params.category == c.slug %}selected{% endif %}>
+                    {{ c.name }} ({{ c.vehicle_count }})
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label small fw-semibold">Brand</label>
+              <select name="brand" class="form-select form-select-sm">
+                <option value="">All brands</option>
+                {% for b in brands %}
+                  <option value="{{ b.slug }}" {% if params.brand == b.slug %}selected{% endif %}>{{ b.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label small fw-semibold">Price range (₹)</label>
+              <div class="input-group input-group-sm">
+                <input type="number" min="0" name="min_price" class="form-control"
+                       value="{{ params.min_price|default:'' }}" placeholder="Min">
+                <span class="input-group-text">–</span>
+                <input type="number" min="0" name="max_price" class="form-control"
+                       value="{{ params.max_price|default:'' }}" placeholder="Max">
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label small fw-semibold">Manufacturing year (from)</label>
+              <select name="year_from" class="form-select form-select-sm">
+                <option value="">Any year</option>
+                <option value="2026" {% if params.year_from == 2026 %}selected{% endif %}>2026 and newer</option>
+                <option value="2025" {% if params.year_from == 2025 %}selected{% endif %}>2025 and newer</option>
+                <option value="2024" {% if params.year_from == 2024 %}selected{% endif %}>2024 and newer</option>
+                <option value="2023" {% if params.year_from == 2023 %}selected{% endif %}>2023 and newer</option>
+                <option value="2022" {% if params.year_from == 2022 %}selected{% endif %}>2022 and newer</option>
+                <option value="2021" {% if params.year_from == 2021 %}selected{% endif %}>2021 and newer</option>
+                <option value="2020" {% if params.year_from == 2020 %}selected{% endif %}>2020 and newer</option>
+                <option value="2018" {% if params.year_from == 2018 %}selected{% endif %}>2018 and newer</option>
+                <option value="2015" {% if params.year_from == 2015 %}selected{% endif %}>2015 and newer</option>
+                <option value="2010" {% if params.year_from == 2010 %}selected{% endif %}>2010 and newer</option>
+              </select>
+            </div>
+
+            <div class="row g-2 mb-3">
+              <div class="col-6">
+                <label class="form-label small fw-semibold">Fuel</label>
+                <select name="fuel_type" class="form-select form-select-sm">
+                  <option value="">Any</option>
+                  {% for value, label in fuel_choices %}
+                    <option value="{{ value }}" {% if params.fuel_type == value %}selected{% endif %}>{{ label }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="col-6">
+                <label class="form-label small fw-semibold">Transmission</label>
+                <select name="transmission" class="form-select form-select-sm">
+                  <option value="">Any</option>
+                  {% for value, label in transmission_choices %}
+                    <option value="{{ value }}" {% if params.transmission == value %}selected{% endif %}>{{ label }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label small fw-semibold">Location</label>
+              <input type="text" name="location" class="form-control form-control-sm"
+                     value="{{ params.location }}" placeholder="e.g. Pune">
+            </div>
+
+            {% if show_status_filter %}
+            <div class="mb-3">
+              <label class="form-label small fw-semibold">Availability</label>
+              <select name="status" class="form-select form-select-sm">
+                <option value="">Any status</option>
+                {% for value, label in status_choices %}
+                  <option value="{{ value }}" {% if params.status == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            {% endif %}
+
+            <button type="submit" class="btn btn-primary w-100">
+              <i class="bi bi-search me-1"></i>Apply Filters
+            </button>
+          </form>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ================= RESULTS ================= -->
+    <div class="col-lg-9">
+      <!-- Sort bar -->
+      <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+        <div class="small text-secondary">
+          Showing page {{ page_obj.number|default:1 }} of {{ page_obj.paginator.num_pages|default:1 }}
+          · {{ total_count }} result{{ total_count|pluralize }}
+        </div>
+        <div class="btn-group btn-group-sm flex-wrap" role="group" aria-label="Sort vehicles">
+          {% for value, label in sort_choices %}
+            <a class="btn {% if params.sort == value %}btn-dark{% else %}btn-outline-secondary{% endif %}"
+               href="?{{ querystring }}{% if querystring %}&{% endif %}sort={{ value }}">{{ label }}</a>
+          {% endfor %}
+        </div>
+      </div>
+
+      {% if vehicles %}
+        <div class="row g-3 g-md-4">
+          {% for vehicle in vehicles %}
+            <div class="col-sm-6 col-xl-4">
+              {% include "components/vehicle_card.html" with vehicle=vehicle show_desc=True %}
+            </div>
+          {% endfor %}
+        </div>
+
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+        <nav class="mt-4" aria-label="Vehicle pages">
+          <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+              <li class="page-item">
+                <a class="page-link" href="?{{ querystring }}&page={{ page_obj.previous_page_number }}">
+                  <i class="bi bi-chevron-left"></i> Prev
+                </a>
+              </li>
+            {% else %}
+              <li class="page-item disabled"><span class="page-link"><i class="bi bi-chevron-left"></i> Prev</span></li>
+            {% endif %}
+
+            {% for num in page_obj.paginator.page_range %}
+              {% if page_obj.number == num %}
+                <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+              {% elif num > page_obj.number|add:"-3" and num < page_obj.number|add:"3" %}
+                <li class="page-item">
+                  <a class="page-link" href="?{{ querystring }}&page={{ num }}">{{ num }}</a>
+                </li>
+              {% endif %}
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+              <li class="page-item">
+                <a class="page-link" href="?{{ querystring }}&page={{ page_obj.next_page_number }}">
+                  Next <i class="bi bi-chevron-right"></i>
+                </a>
+              </li>
+            {% else %}
+              <li class="page-item disabled"><span class="page-link">Next <i class="bi bi-chevron-right"></i></span></li>
+            {% endif %}
+          </ul>
+        </nav>
+        {% endif %}
+
+      {% else %}
+        <!-- Empty state -->
+        <div class="card border-0 shadow-sm">
+          <div class="card-body text-center py-5">
+            <i class="bi bi-search display-3 text-secondary opacity-50"></i>
+            <h5 class="mt-3 fw-semibold">No vehicles match your search</h5>
+            <p class="text-secondary">Try removing some filters or searching a different keyword.</p>
+            <a href="{% url 'vehicle_list' %}" class="btn btn-primary">
+              <i class="bi bi-arrow-counterclockwise me-1"></i>Clear all filters
+            </a>
+          </div>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

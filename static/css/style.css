@@ -1,0 +1,57 @@
+/* ============================================================
+   {{ SITE_NAME }} – shared styles (public site + admin panel)
+   Bootstrap 5 is loaded from CDN; this file only adds polish.
+   ============================================================ */
+
+:root {
+  --vb-primary: #0d6efd;
+  --vb-dark: #111827;
+}
+
+body { font-family: "Segoe UI", system-ui, -apple-system, sans-serif; }
+
+/* ---------- Vehicle cards ---------- */
+.vehicle-card { transition: transform .18s ease, box-shadow .18s ease; }
+.vehicle-card:hover { transform: translateY(-4px); box-shadow: 0 .75rem 1.25rem rgba(0,0,0,.12) !important; }
+.vehicle-thumb { height: 190px; object-fit: cover; width: 100%; }
+.text-truncate-2 {
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+
+/* ---------- Hero ---------- */
+.hero-home {
+  background: linear-gradient(rgba(17,24,39,.82), rgba(17,24,39,.82)),
+              url("https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?auto=format&fit=crop&w=1600&q=60") center/cover no-repeat;
+  color: #fff;
+}
+
+/* ---------- Gallery (vehicle detail) ---------- */
+.gallery-main-img { height: 420px; object-fit: cover; background: #e9ecef; }
+.gallery-thumb { width: 88px; height: 64px; object-fit: cover; cursor: pointer; opacity: .7; transition: .15s; }
+.gallery-thumb:hover, .gallery-thumb.active { opacity: 1; border-color: var(--vb-primary) !important; }
+@media (max-width: 576px) {
+  .gallery-main-img { height: 240px; }
+}
+
+/* ---------- Spec table ---------- */
+.spec-table td { border-color: #f0f2f5; }
+.spec-table td:first-child { width: 45%; }
+
+/* ---------- Offer modal ---------- */
+.offer-modal { position: relative; }
+.offer-modal-banner { max-height: 280px; object-fit: cover; }
+
+/* ---------- Admin dashboard ---------- */
+.stat-card .stat-icon {
+  width: 48px; height: 48px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.35rem; margin-bottom: .5rem;
+}
+
+/* ---------- Misc ---------- */
+.section-title::after {
+  content: ""; display: block; width: 56px; height: 4px;
+  background: #ffc107; border-radius: 2px; margin-top: .5rem;
+}
+footer a { color: rgba(255,255,255,.75); text-decoration: none; }
+footer a:hover { color: #fff; }

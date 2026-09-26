@@ -1,0 +1,28 @@
+{% extends "public/base.html" %}
+{% block title %}Please check your details · {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<div class="container py-5" style="max-width: 640px;">
+  <div class="card border-0 shadow-sm">
+    <div class="card-body p-4 p-md-5 text-center">
+      <i class="bi bi-exclamation-triangle-fill display-3 text-warning"></i>
+      <h4 class="fw-bold mt-3 mb-2">We couldn't submit your enquiry</h4>
+      <p class="text-secondary small">Please fix the following and try again:</p>
+
+      <ul class="list-group list-group-flush text-start small mb-4">
+        {% for field, errors in errors.items %}
+          {% for error in errors %}
+            <li class="list-group-item text-danger border-0 px-0">
+              <i class="bi bi-x-circle me-1"></i><strong>{{ field|title }}</strong>: {{ error }}
+            </li>
+          {% endfor %}
+        {% endfor %}
+      </ul>
+
+      <a href="{{ back }}" class="btn btn-primary px-4">
+        <i class="bi bi-arrow-left me-1"></i>Go back &amp; edit
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}

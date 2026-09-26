@@ -1,0 +1,200 @@
+{% extends "public/base.html" %}
+{% load static %}
+{% block title %}{{ vehicle.title }} · {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<!-- Breadcrumb -->
+<div class="bg-dark py-2">
+  <div class="container">
+    <ol class="breadcrumb small mb-0">
+      <li class="breadcrumb-item"><a class="link-warning text-decoration-none" href="{% url 'home' %}">Home</a></li>
+      <li class="breadcrumb-item"><a class="link-warning text-decoration-none" href="{% url 'vehicle_list' %}">Vehicles</a></li>
+      <li class="breadcrumb-item"><a class="link-warning text-decoration-none" href="{% url 'category_page' vehicle.category.slug %}">{{ vehicle.category.name }}</a></li>
+      <li class="breadcrumb-item active text-white-50" aria-current="page">{{ vehicle.title }}</li>
+    </ol>
+  </div>
+</div>
+
+<div class="container py-4">
+  <div class="row g-4">
+
+    <!-- ============ GALLERY ============ -->
+    <div class="col-lg-7">
+      {% with imgs=vehicle.images.all %}
+      <div class="card border-0 shadow-sm overflow-hidden">
+        <img id="galleryMain"
+             src="{% if vehicle.primary_image and vehicle.primary_image.image %}{{ vehicle.primary_image.image.url }}{% elif vehicle.cover_image %}{{ vehicle.cover_image.url }}{% else %}data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='520'%3E%3Crect width='100%25' height='100%25' fill='%23e9ecef'/%3E%3Ctext x='50%25' y='50%25' font-size='40' fill='%23adb5bd' text-anchor='middle' dominant-baseline='middle'%3ENo Image%3C/text%3E%3C/svg%3E{% endif %}"
+             alt="{{ vehicle.primary_image.alt_text|default:vehicle.title }}"
+             class="w-100 gallery-main-img">
+        {% if vehicle.has_discount %}
+          <span class="badge text-bg-danger position-absolute top-0 start-0 m-3 fs-6">SAVE ₹{{ vehicle.discount_amount|floatformat:"0" }}</span>
+        {% endif %}
+      </div>
+
+      {% if imgs|length > 1 %}
+      <div class="d-flex gap-2 mt-2 overflow-auto pb-1" id="galleryThumbs">
+        {% for img in imgs %}
+          {% if img.image %}
+          <img src="{{ img.image.url }}" alt="{{ img.alt_text|default:vehicle.title }}"
+               class="gallery-thumb rounded border {% if forloop.first %}active{% endif %}"
+               data-full="{{ img.image.url }}" loading="lazy">
+          {% endif %}
+        {% endfor %}
+      </div>
+      {% endif %}
+      {% endwith %}
+
+      <!-- Description -->
+      <div class="card border-0 shadow-sm mt-4">
+        <div class="card-body">
+          <h5 class="fw-bold"><i class="bi bi-card-text me-1"></i>Description</h5>
+          <p class="mb-0 text-secondary" style="white-space: pre-line;">{{ vehicle.description|default:"No description provided for this vehicle." }}</p>
+        </div>
+      </div>
+
+      <!-- Features -->
+      <div class="card border-0 shadow-sm mt-4">
+        <div class="card-body">
+          <h5 class="fw-bold mb-3"><i class="bi bi-stars me-1"></i>Features</h5>
+          {% if vehicle.features.all %}
+            <div class="row g-2">
+              {% for f in vehicle.features.all %}
+                <div class="col-6 col-md-4">
+                  <span class="badge rounded-pill text-bg-light border w-100 py-2">
+                    <i class="bi bi-check-circle-fill text-success me-1"></i>{{ f.name }}
+                  </span>
+                </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <p class="text-secondary mb-0">No features listed.</p>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Specifications -->
+      <div class="card border-0 shadow-sm mt-4">
+        <div class="card-body">
+          <h5 class="fw-bold mb-3"><i class="bi bi-list-columns-reverse me-1"></i>Specifications</h5>
+          <div class="table-responsive">
+            <table class="table table-sm align-middle mb-0 spec-table">
+              <tbody>
+                <tr><td class="text-secondary">Brand</td><td class="fw-semibold">{{ vehicle.brand.name }}</td></tr>
+                <tr><td class="text-secondary">Model</td><td class="fw-semibold">{{ vehicle.model_name }}</td></tr>
+                <tr><td class="text-secondary">Category</td><td class="fw-semibold">{{ vehicle.category.name }}</td></tr>
+                <tr><td class="text-secondary">Manufacturing Year</td><td class="fw-semibold">{{ vehicle.manufacturing_year }}</td></tr>
+                <tr><td class="text-secondary">Registration Year</td><td class="fw-semibold">{{ vehicle.registration_year }}</td></tr>
+                <tr><td class="text-secondary">Fuel Type</td><td class="fw-semibold">{{ vehicle.get_fuel_type_display }}</td></tr>
+                <tr><td class="text-secondary">Transmission</td><td class="fw-semibold">{{ vehicle.get_transmission_display }}</td></tr>
+                <tr><td class="text-secondary">KM Driven</td><td class="fw-semibold">{{ vehicle.km_driven }} km</td></tr>
+                <tr><td class="text-secondary">Engine</td><td class="fw-semibold">{% if vehicle.engine_cc %}{{ vehicle.engine_cc }} cc{% else %}—{% endif %}</td></tr>
+                <tr><td class="text-secondary">Color</td><td class="fw-semibold">{{ vehicle.color|default:"—" }}</td></tr>
+                <tr><td class="text-secondary">Ownership</td><td class="fw-semibold">{{ vehicle.get_ownership_display }}</td></tr>
+                <tr><td class="text-secondary">Location</td><td class="fw-semibold"><i class="bi bi-geo-alt me-1"></i>{{ vehicle.location }}</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ SUMMARY + CONTACT ============ -->
+    <div class="col-lg-5">
+      <div class="card border-0 shadow-sm sticky-lg-top" style="top: 80px;">
+        <div class="card-body p-4">
+          <h1 class="h4 fw-bold mb-1">{{ vehicle.title }}</h1>
+          <p class="text-secondary small mb-3">
+            {{ vehicle.brand.name }} · {{ vehicle.category.name }} · {{ vehicle.manufacturing_year }} yr
+            {% if vehicle.status == 'available' %}<span class="badge text-bg-success ms-1">Available</span>
+            {% elif vehicle.status == 'sold' %}<span class="badge text-bg-dark ms-1">Sold</span>
+            {% elif vehicle.status == 'reserved' %}<span class="badge text-bg-warning ms-1">Reserved</span>{% endif %}
+          </p>
+
+          <div class="bg-light rounded p-3 mb-4">
+            {% if vehicle.has_discount %}
+              <div class="d-flex align-items-baseline gap-2 flex-wrap">
+                <span class="h3 fw-bold text-success mb-0">₹{{ vehicle.offer_price|floatformat:"0" }}</span>
+                <s class="text-secondary">₹{{ vehicle.price|floatformat:"0" }}</s>
+                <span class="badge text-bg-danger">Offer Price</span>
+              </div>
+              <div class="small text-secondary">You save ₹{{ vehicle.discount_amount|floatformat:"0" }} on this listing</div>
+            {% else %}
+              <span class="h3 fw-bold text-primary mb-0">₹{{ vehicle.price|floatformat:"0" }}</span>
+            {% endif %}
+          </div>
+
+          <ul class="list-unstyled small text-secondary mb-4">
+            <li class="mb-1"><i class="bi bi-speedometer2 me-2"></i>{{ vehicle.km_driven }} km driven</li>
+            <li class="mb-1"><i class="bi bi-fuel-pump me-2"></i>{{ vehicle.get_fuel_type_display }} · {{ vehicle.get_transmission_display }}</li>
+            <li class="mb-1"><i class="bi bi-calendar3 me-2"></i>{{ vehicle.age_years }} year{{ vehicle.age_years|pluralize }} old</li>
+            <li><i class="bi bi-geo-alt me-2"></i>{{ vehicle.location }}</li>
+          </ul>
+
+          <!-- Contact seller form -->
+          <h5 class="fw-bold mb-3" id="contact"><i class="bi bi-person-lines-fill me-1"></i>Contact Seller</h5>
+          <form method="post" action="{% url 'contact_vehicle_form' %}" novalidate>
+            {% csrf_token %}
+            <input type="hidden" name="vehicle" value="{{ vehicle.pk }}">
+            <input type="hidden" name="next" value="{{ vehicle.get_absolute_url }}#contact">
+            <div class="mb-2">
+              <label class="form-label small">Name *</label>
+              <input type="text" name="name" class="form-control form-control-sm" required maxlength="120"
+                     value="{{ request.POST.name|default:'' }}" placeholder="Your full name">
+            </div>
+            <div class="mb-2">
+              <label class="form-label small">Email *</label>
+              <input type="email" name="email" class="form-control form-control-sm" required maxlength="254"
+                     value="{{ request.POST.email|default:'' }}" placeholder="you@example.com">
+            </div>
+            <div class="mb-2">
+              <label class="form-label small">Phone *</label>
+              <input type="tel" name="phone" class="form-control form-control-sm" required maxlength="20"
+                     value="{{ request.POST.phone|default:'' }}" placeholder="+91 98XXXXXXXX">
+            </div>
+            <div class="mb-3">
+              <label class="form-label small">Message</label>
+              <textarea name="message" rows="3" class="form-control form-control-sm"
+                        maxlength="2000" placeholder="Hi, I'm interested in this {{ vehicle.title }}. Is it still available?">Hi, I'm interested in this {{ vehicle.title }}. Is it still available?</textarea>
+            </div>
+            <button type="submit" class="btn btn-warning w-100 fw-semibold py-2"
+                    {% if vehicle.status == 'sold' %}disabled{% endif %}>
+              <i class="bi bi-send me-1"></i>{% if vehicle.status == 'sold' %}Sorry, this vehicle is sold{% else %}Contact Seller{% endif %}
+            </button>
+            <p class="small text-secondary text-center mt-2 mb-0">We never share your contact details publicly.</p>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Similar vehicles -->
+  {% if similar %}
+  <section class="mt-5">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h4 class="fw-bold mb-0">Similar {{ vehicle.category.name }}</h4>
+      <a href="{% url 'category_page' vehicle.category.slug %}" class="btn btn-sm btn-outline-primary">View all</a>
+    </div>
+    <div class="row g-3 g-md-4">
+      {% for v in similar %}
+        <div class="col-sm-6 col-lg-3">{% include "components/vehicle_card.html" with vehicle=v %}</div>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // Simple image gallery: thumbnail click swaps the main image.
+  document.querySelectorAll('#galleryThumbs .gallery-thumb').forEach(function (thumb) {
+    thumb.addEventListener('click', function () {
+      var main = document.getElementById('galleryMain');
+      if (main) main.src = thumb.dataset.full;
+      document.querySelectorAll('#galleryThumbs .gallery-thumb')
+        .forEach(function (t) { t.classList.remove('active'); });
+      thumb.classList.add('active');
+    });
+  });
+</script>
+{% endblock %}

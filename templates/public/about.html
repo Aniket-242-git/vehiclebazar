@@ -1,0 +1,80 @@
+{% extends "public/base.html" %}
+{% block title %}About Us · {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<section class="hero bg-dark text-white py-5">
+  <div class="container text-center py-4">
+    <h1 class="fw-bold">About {{ SITE_NAME }}</h1>
+    <p class="lead text-white-50 mb-0">{{ SITE_TAGLINE }}</p>
+  </div>
+</section>
+
+<div class="container py-5">
+  <div class="row g-4 align-items-center mb-5">
+    <div class="col-md-6">
+      <h2 class="fw-bold mb-3">Our Story</h2>
+      <p class="text-secondary">
+        {{ SITE_NAME }} was founded with one simple goal: make buying and selling
+        second-hand vehicles trustworthy, transparent and effortless. Every listing
+        on our marketplace is reviewed before it goes live, so buyers can browse
+        with confidence and sellers reach genuine, interested customers quickly.
+      </p>
+      <p class="text-secondary">
+        From city cars and family SUVs to bikes, scooters and commercial vehicles —
+        we bring verified sellers and serious buyers together on one clean, modern
+        platform.
+      </p>
+    </div>
+    <div class="col-md-6">
+      <div class="row g-3">
+        <div class="col-6">
+          <div class="card border-0 shadow-sm text-center h-100">
+            <div class="card-body">
+              <i class="bi bi-shield-check display-5 text-primary"></i>
+              <h5 class="fw-bold mt-2 mb-1">Verified Listings</h5>
+              <p class="small text-secondary mb-0">Every vehicle is checked before publishing.</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-6">
+          <div class="card border-0 shadow-sm text-center h-100">
+            <div class="card-body">
+              <i class="bi bi-currency-rupee display-5 text-success"></i>
+              <h5 class="fw-bold mt-2 mb-1">Fair Pricing</h5>
+              <p class="small text-secondary mb-0">Transparent prices, occasional offers.</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-6">
+          <div class="card border-0 shadow-sm text-center h-100">
+            <div class="card-body">
+              <i class="bi bi-chat-dots display-5 text-warning"></i>
+              <h5 class="fw-bold mt-2 mb-1">Direct Contact</h5>
+              <p class="small text-secondary mb-0">Reach sellers instantly via enquiry form.</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-6">
+          <div class="card border-0 shadow-sm text-center h-100">
+            <div class="card-body">
+              <i class="bi bi-tags display-5 text-danger"></i>
+              <h5 class="fw-bold mt-2 mb-1">All Categories</h5>
+              <p class="small text-secondary mb-0">Cars, bikes, scooters, trucks &amp; more.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="text-center">
+    <h3 class="fw-bold mb-4">Ready to find your next vehicle?</h3>
+    <a href="{% url 'vehicle_list' %}" class="btn btn-primary btn-lg px-5">
+      <i class="bi bi-search me-1"></i>Browse Vehicles
+    </a>
+    <a href="{% url 'contact_us' %}" class="btn btn-outline-primary btn-lg px-5 ms-2">
+      <i class="bi bi-headset me-1"></i>Talk to Us
+    </a>
+  </div>
+</div>
+{% endblock %}
