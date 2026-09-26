@@ -1,0 +1,90 @@
+{% extends "public/base.html" %}
+{% block title %}Contact Us · {{ SITE_NAME }}{% endblock %}
+
+{% block content %}
+<section class="hero bg-dark text-white py-5">
+  <div class="container text-center py-4">
+    <h1 class="fw-bold">Contact Us</h1>
+    <p class="lead text-white-50 mb-0">Questions about a listing or selling your vehicle? We're here to help.</p>
+  </div>
+</section>
+
+<div class="container py-5">
+  <div class="row g-4 justify-content-center">
+    <div class="col-md-4">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body text-center p-4">
+          <span class="badge text-bg-primary rounded-circle p-3 fs-4"><i class="bi bi-envelope"></i></span>
+          <h5 class="fw-bold mt-3">Email</h5>
+          <p class="text-secondary small mb-0">support@vehiclebazaar.example<br>Mon–Sat, 9 AM – 7 PM</p>
+        </div>
+      </div>
+      <div class="card border-0 shadow-sm mt-3">
+        <div class="card-body text-center p-4">
+          <span class="badge text-bg-success rounded-circle p-3 fs-4"><i class="bi bi-telephone"></i></span>
+          <h5 class="fw-bold mt-3">Phone</h5>
+          <p class="text-secondary small mb-0">+91 98765 43210<br>Toll-free: 1800-000-000</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-6 col-lg-5">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body p-4 p-md-5">
+          {% if success %}
+            <div class="text-center py-4">
+              <i class="bi bi-check-circle-fill display-3 text-success"></i>
+              <h4 class="fw-bold mt-3">Thank you!</h4>
+              <p class="text-secondary">Your enquiry has been received. Our team will get back to you shortly.</p>
+              <a href="{% url 'home' %}" class="btn btn-primary">Back to Home</a>
+            </div>
+          {% else %}
+            <h4 class="fw-bold mb-1">Send us a message</h4>
+            <p class="text-secondary small mb-4">Vehicle reference is optional for general enquiries.</p>
+
+            {% if form and form.errors %}
+              <div class="alert alert-danger py-2 small">
+                Please correct the highlighted fields:
+                <ul class="mb-0 ps-3">
+                  {% for field, errors in form.errors.items %}
+                    {% for error in errors %}<li>{{ field|title }}: {{ error }}</li>{% endfor %}
+                  {% endfor %}
+                </ul>
+              </div>
+            {% endif %}
+
+            <form method="post" novalidate>
+              {% csrf_token %}
+              <div class="mb-3">
+                <label class="form-label">Name *</label>
+                <input type="text" name="name" class="form-control" required maxlength="120"
+                       value="{{ request.POST.name|default:'' }}" placeholder="Your full name">
+              </div>
+              <div class="row g-3">
+                <div class="col-sm-6">
+                  <label class="form-label">Email *</label>
+                  <input type="email" name="email" class="form-control" required
+                         value="{{ request.POST.email|default:'' }}" placeholder="you@example.com">
+                </div>
+                <div class="col-sm-6">
+                  <label class="form-label">Phone *</label>
+                  <input type="tel" name="phone" class="form-control" required maxlength="20"
+                         value="{{ request.POST.phone|default:'' }}" placeholder="+91 98XXXXXXXX">
+                </div>
+              </div>
+              <div class="mt-3">
+                <label class="form-label">Message *</label>
+                <textarea name="message" rows="5" class="form-control" required maxlength="2000"
+                          placeholder="How can we help?">{{ request.POST.message|default:'' }}</textarea>
+              </div>
+              <button type="submit" class="btn btn-primary w-100 mt-4 py-2 fw-semibold">
+                <i class="bi bi-send me-1"></i>Send Message
+              </button>
+            </form>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

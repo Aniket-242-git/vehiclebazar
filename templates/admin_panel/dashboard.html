@@ -1,0 +1,142 @@
+{% extends "admin_panel/base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+  <div>
+    <h4 class="fw-bold mb-0">Marketplace Dashboard</h4>
+    <p class="text-secondary small mb-0">Overview of listings, enquiries and offers.</p>
+  </div>
+  <a href="/django-admin/" class="btn btn-dark btn-sm"><i class="bi bi-sliders me-1"></i>Full Admin (CRUD)</a>
+</div>
+
+<!-- Stat cards -->
+<div class="row g-3 mb-4">
+  <div class="col-6 col-md-4 col-xl-2">
+    <div class="card border-0 shadow-sm stat-card h-100">
+      <div class="card-body text-center">
+        <div class="stat-icon bg-primary bg-opacity-10 text-primary mx-auto"><i class="bi bi-car-front"></i></div>
+        <h3 class="fw-bold mb-0">{{ stats.total|default:0 }}</h3>
+        <div class="small text-secondary">Total Vehicles</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-4 col-xl-2">
+    <div class="card border-0 shadow-sm stat-card h-100">
+      <div class="card-body text-center">
+        <div class="stat-icon bg-success bg-opacity-10 text-success mx-auto"><i class="bi bi-check-circle"></i></div>
+        <h3 class="fw-bold mb-0">{{ stats.active|default:0 }}</h3>
+        <div class="small text-secondary">Active Listings</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-4 col-xl-2">
+    <div class="card border-0 shadow-sm stat-card h-100">
+      <div class="card-body text-center">
+        <div class="stat-icon bg-dark bg-opacity-10 text-dark mx-auto"><i class="bi bi-bag-check"></i></div>
+        <h3 class="fw-bold mb-0">{{ stats.sold|default:0 }}</h3>
+        <div class="small text-secondary">Sold Vehicles</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-4 col-xl-2">
+    <div class="card border-0 shadow-sm stat-card h-100">
+      <div class="card-body text-center">
+        <div class="stat-icon bg-info bg-opacity-10 text-info mx-auto"><i class="bi bi-tags"></i></div>
+        <h3 class="fw-bold mb-0">{{ total_categories }}</h3>
+        <div class="small text-secondary">Categories</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-4 col-xl-2">
+    <div class="card border-0 shadow-sm stat-card h-100">
+      <div class="card-body text-center">
+        <div class="stat-icon bg-warning bg-opacity-10 text-warning mx-auto"><i class="bi bi-envelope"></i></div>
+        <h3 class="fw-bold mb-0">{{ contact_stats.total|default:0 }}</h3>
+        <div class="small text-secondary">Contact Requests</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-4 col-xl-2">
+    <div class="card border-0 shadow-sm stat-card h-100">
+      <div class="card-body text-center">
+        <div class="stat-icon bg-danger bg-opacity-10 text-danger mx-auto"><i class="bi bi-megaphone"></i></div>
+        <h3 class="fw-bold mb-0">{{ active_offers }}</h3>
+        <div class="small text-secondary">Active Offers</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4">
+  <!-- Recent vehicles -->
+  <div class="col-lg-7">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <span class="fw-semibold"><i class="bi bi-clock-history me-1"></i>Recently Added Vehicles</span>
+        <a href="/django-admin/vehicles/vehicle/" class="btn btn-sm btn-outline-primary">Manage</a>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-light">
+            <tr><th>Title</th><th>Category</th><th>Price</th><th>Status</th></tr>
+          </thead>
+          <tbody>
+            {% for v in recent_vehicles %}
+              <tr>
+                <td><a href="{{ v.get_absolute_url }}" target="_blank" class="text-decoration-none">{{ v.title }}</a></td>
+                <td class="text-secondary small">{{ v.category.name }}</td>
+                <td>₹{{ v.price|floatformat:"0" }}</td>
+                <td>
+                  {% if v.status == 'available' %}<span class="badge text-bg-success">Available</span>
+                  {% elif v.status == 'sold' %}<span class="badge text-bg-dark">Sold</span>
+                  {% elif v.status == 'reserved' %}<span class="badge text-bg-warning">Reserved</span>
+                  {% else %}<span class="badge text-bg-secondary">Inactive</span>{% endif %}
+                </td>
+              </tr>
+            {% empty %}
+              <tr><td colspan="4" class="text-center text-secondary py-4">No vehicles yet.
+                <a href="/django-admin/vehicles/vehicle/add/">Add your first vehicle</a>.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent enquiries -->
+  <div class="col-lg-5">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <span class="fw-semibold"><i class="bi bi-chat-dots me-1"></i>Latest Enquiries</span>
+        <span class="badge text-bg-danger">{{ contact_stats.new|default:0 }} new</span>
+      </div>
+      <ul class="list-group list-group-flush">
+        {% for c in recent_contacts %}
+          <li class="list-group-item">
+            <div class="d-flex justify-content-between">
+              <span class="fw-semibold">{{ c.name }}</span>
+              <small class="text-secondary">{{ c.created_at|date:"d M, H:i" }}</small>
+            </div>
+            <div class="small text-secondary text-truncate">
+              {{ c.vehicle.title|default:"General enquiry" }} · {{ c.email }}
+            </div>
+          </li>
+        {% empty %}
+          <li class="list-group-item text-center text-secondary py-4">No contact requests yet.</li>
+        {% endfor %}
+      </ul>
+      <div class="card-footer bg-white text-end border-0">
+        <a href="/admin-panel/contact-requests/" class="btn btn-sm btn-outline-dark">View all requests</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% if live_offer %}
+<div class="alert alert-warning mt-4 d-flex justify-content-between align-items-center flex-wrap gap-2">
+  <span><i class="bi bi-megaphone me-1"></i><strong>Offer modal is live:</strong> “{{ live_offer.title }}”
+    {% if live_offer.end_date %}(till {{ live_offer.end_date|date:"d M Y, H:i" }}){% endif %}</span>
+  <a href="/django-admin/offers/offer/{{ live_offer.pk }}/change/" class="btn btn-sm btn-warning">Edit offer</a>
+</div>
+{% endif %}
+{% endblock %}

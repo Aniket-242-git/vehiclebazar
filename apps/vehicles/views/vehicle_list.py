@@ -5,9 +5,25 @@ from django.conf import settings
 from django.db.models import Count
 from django.shortcuts import render
 
-from apps.offers.services.offer_service import OfferService
-from apps.vehicles.models import Brand, Category, VehicleStatus
+from apps.vehicles.models import (
+    Brand,
+    Category,
+    FuelType,
+    Transmission,
+    VehicleStatus,
+)
 from apps.vehicles.services.vehicle_service import VehicleService
+
+# Sort options shown on the listing page (value -> label). Values must match
+# VehicleRepository.SORT_FIELDS keys; unknown values fall back to "latest".
+SORT_CHOICES = [
+    ("latest", "Latest"),
+    ("oldest", "Oldest"),
+    ("price_asc", "Price: Low to High"),
+    ("price_desc", "Price: High to Low"),
+    ("year_desc", "Newest Model"),
+    ("year_asc", "Oldest Model"),
+]
 
 
 def home(request):
@@ -44,6 +60,9 @@ def vehicle_list(request):
         "categories": categories,
         "brands": brands,
         "status_choices": VehicleStatus.choices,
+        "fuel_choices": FuelType.choices,
+        "transmission_choices": Transmission.choices,
+        "sort_choices": SORT_CHOICES,
         "total_count": page_obj.paginator.count if page_obj else 0,
         "querystring": _qs_without(request.GET, ["page"]),
     }
