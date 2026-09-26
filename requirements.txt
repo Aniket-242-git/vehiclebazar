@@ -1,51 +1,72 @@
 # =============================================================================
+
 # Django Second-Hand Vehicle Marketplace - requirements
-# Target: Python 3.10 - 3.12 on cPanel / shared hosting (LiteSpeed or Apache)
+
+# Python 3.10 - 3.12
+
 #
-# All packages below ship pure-python wheels (pip install needs NO compiler),
-# so they install reliably inside a cPanel "Python Application" virtualenv.
+
+# Development:
+
+# SQLite (no database driver required)
+
 #
-# Install on the server:
-#   python3.11 -m venv ~/venvs/vehiclemarket
-#   ~/venvs/vehiclemarket/bin/pip install -r requirements.txt
+
+# Production:
+
+# MySQL / MariaDB on cPanel
+
 # =============================================================================
 
 # --- Core framework ----------------------------------------------------------
-Django>=5.0,<5.1            # LTS-safe range; Django 5.0 supports Python 3.10-3.13
+
+Django>=5.0,<5.1
 
 # --- REST API ----------------------------------------------------------------
-djangorestframework>=3.15,<3.16   # DRF for /api/ endpoints (session auth only)
-django-filter>=24.2,<25.0         # Database-level filtering backend for DRF
 
-# --- Configuration / secrets --------------------------------------------------
-python-dotenv>=1.0,<2.0           # Loads .env (SECRET_KEY, DB creds) - never commit secrets
+djangorestframework>=3.15,<3.16
+django-filter>=24.2,<25.0
 
-# --- Image handling (VehicleImage / Category image / Offer banner) ------------
-Pillow>=10.3,<11.0                # Prebuilt manylinux wheels exist -> safe on cPanel
+# --- Configuration / secrets -------------------------------------------------
+
+python-dotenv>=1.0,<2.0
+
+# --- Image handling ----------------------------------------------------------
+
+Pillow>=10.3,<11.0
 
 # =============================================================================
-# DATABASE STRATEGY: SQLite for development, MySQL for production.
+
+# DATABASE
+
 #
-# Development (config/settings/development.py):
-#   Uses SQLite automatically - ZERO extra packages required. Just run:
-#     python manage.py migrate && python manage.py runserver
+
+# Development:
+
+# SQLite
+
+# No additional database package is required.
+
 #
-# Production (config/settings/production.py -> MySQL on cPanel):
-PyMySQL>=1.1,<2.0          # PURE-PYTHON MySQL driver - always installs on shared
-                           # hosting (no compiler needed). config/__init__.py
-                           # automatically registers it as MySQLdb.
-# mysqlclient              # OPTIONAL faster C driver if your host allows
-                           # compilation; PyMySQL is used automatically when
-                           # mysqlclient is absent.
-#
-# PostgreSQL alternative (DB_ENGINE=django.db.backends.postgresql):
-#   psycopg2-binary        # prebuilt binary wheel, no compiler needed
+
+# Production:
+
+# MySQL / MariaDB
+
 # =============================================================================
 
-# --- Production WSGI server (only used when you run your own process manager;
-#     LiteSpeed/Apache Passenger on cPanel does not require it) ---------------
+# Pure-Python MySQL driver
+
+PyMySQL>=1.1,<2.0
+
+# --- Production WSGI server --------------------------------------------------
+
 gunicorn>=22.0,<23.0
 
-# --- Development / testing helpers (optional; skip on production installs) ----
+# --- Development / testing helpers ------------------------------------------
+
 # pytest>=8.0
+
 # pytest-django>=4.8
+
+# =============================================================================

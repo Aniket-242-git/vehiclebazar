@@ -6,7 +6,7 @@ import sys
 
 def main() -> None:
     # Default to the development settings module; override with DJANGO_SETTINGS_MODULE.
-    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings.development")
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings.production")
 
     # Load environment variables from .env (never commit real secrets).
     try:
