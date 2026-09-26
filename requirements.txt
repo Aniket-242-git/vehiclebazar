@@ -1,0 +1,50 @@
+# =============================================================================
+# Django Second-Hand Vehicle Marketplace - requirements
+# Target: Python 3.10 - 3.12 on cPanel / shared hosting (LiteSpeed or Apache)
+#
+# All packages below ship pure-python wheels (pip install needs NO compiler),
+# so they install reliably inside a cPanel "Python Application" virtualenv.
+#
+# Install on the server:
+#   python3.11 -m venv ~/venvs/vehiclemarket
+#   ~/venvs/vehiclemarket/bin/pip install -r requirements.txt
+# =============================================================================
+
+# --- Core framework ----------------------------------------------------------
+Django>=5.0,<5.1            # LTS-safe range; Django 5.0 supports Python 3.10-3.13
+
+# --- REST API ----------------------------------------------------------------
+djangorestframework>=3.15,<3.16   # DRF for /api/ endpoints (session auth only)
+django-filter>=24.2,<25.0         # Database-level filtering backend for DRF
+
+# --- Configuration / secrets --------------------------------------------------
+python-dotenv>=1.0,<2.0           # Loads .env (SECRET_KEY, DB creds) - never commit secrets
+
+# --- Image handling (VehicleImage / Category image / Offer banner) ------------
+Pillow>=10.3,<11.0                # Prebuilt manylinux wheels exist -> safe on cPanel
+
+# =============================================================================
+# DATABASE DRIVER - install ONE of the following depending on your DB engine:
+#
+# MySQL (cPanel default, DB_ENGINE=django.db.backends.mysql):
+#   mysqlclient          # preferred if pip can compile it (needs gcc +
+#                        # mysql-devel; often available on cPanel via
+#                        # "pip install mysqlclient" in the Python app UI)
+#   PyMySQL              # PURE-PYTHON fallback that always installs on shared
+#                        # hosting. If you use it, add this line to config/__init__.py:
+#                        #   import pymysql; pymysql.install_as_MySQLdb()
+#
+# PostgreSQL (DB_ENGINE=django.db.backends.postgresql):
+#   psycopg2-binary      # prebuilt binary wheel, no compiler needed
+#
+# These are intentionally NOT pinned above because most shared hosts cannot
+# compile C extensions; enable the one matching your database.
+# =============================================================================
+
+# --- Production WSGI server (only used when you run your own process manager;
+#     LiteSpeed/Apache Passenger on cPanel does not require it) ---------------
+gunicorn>=22.0,<23.0
+
+# --- Development / testing helpers (optional; skip on production installs) ----
+# pytest>=8.0
+# pytest-django>=4.8

@@ -1,0 +1,37 @@
+<footer class="bg-dark text-light pt-5 pb-4 mt-5">
+  <div class="container">
+    <div class="row g-4">
+      <div class="col-lg-4">
+        <h5 class="fw-bold"><i class="bi bi-car-front-fill text-warning me-1"></i>{{ SITE_NAME }}</h5>
+        <p class="text-secondary small mb-2">{{ SITE_TAGLINE }}</p>
+      </div>
+      <div class="col-6 col-lg-2">
+        <h6 class="text-uppercase small text-warning">Explore</h6>
+        <ul class="list-unstyled small">
+          <li><a class="link-light text-decoration-none" href="{% url 'home' %}">Home</a></li>
+          <li><a class="link-light text-decoration-none" href="{% url 'vehicle_list' %}">All Vehicles</a></li>
+          <li><a class="link-light text-decoration-none" href="{% url 'categories' %}">Categories</a></li>
+          <li><a class="link-light text-decoration-none" href="{% url 'about' %}">About Us</a></li>
+        </ul>
+      </div>
+      <div class="col-6 col-lg-3">
+        <h6 class="text-uppercase small text-warning">Support</h6>
+        <ul class="list-unstyled small">
+          <li><a class="link-light text-decoration-none" href="{% url 'contact_us' %}">Contact Us</a></li>
+          <li><a class="link-light text-decoration-none" href="/admin-panel/">Admin Panel</a></li>
+        </ul>
+      </div>
+      <div class="col-lg-3">
+        <h6 class="text-uppercase small text-warning">Popular searches</h6>
+        <div class="d-flex flex-wrap gap-1">
+          <a class="badge rounded-pill text-bg-secondary text-decoration-none" href="{% url 'vehicle_list' %}?fuel_type=petrol">Petrol</a>
+          <a class="badge rounded-pill text-bg-secondary text-decoration-none" href="{% url 'vehicle_list' %}?fuel_type=diesel">Diesel</a>
+          <a class="badge rounded-pill text-bg-secondary text-decoration-none" href="{% url 'vehicle_list' %}?fuel_type=electric">Electric</a>
+          <a class="badge rounded-pill text-bg-secondary text-decoration-none" href="{% url 'vehicle_list' %}?year_from=2020">2020+</a>
+        </div>
+      </div>
+    </div>
+    <hr class="border-secondary">
+    <p class="text-center text-secondary small mb-0">&copy; {% now "Y" %} {{ SITE_NAME }}. All rights reserved.</p>
+  </div>
+</footer>

@@ -1,0 +1,31 @@
+{% if modal_offer %}
+{# Offer modal – shown once per session per offer (see static/js/main.js). #}
+<div class="modal fade" id="offerModal" tabindex="-1" aria-labelledby="offerModalLabel" aria-hidden="true"
+     data-offer-id="{{ modal_offer.pk }}">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content border-0 shadow overflow-hidden offer-modal">
+      {% if modal_offer.image %}
+        <img src="{{ modal_offer.image.url }}" alt="{{ modal_offer.title }}" class="w-100 offer-modal-banner">
+      {% endif %}
+      <div class="modal-body text-center p-4 p-md-5">
+        <span class="badge text-bg-danger mb-3"><i class="bi bi-lightning-charge-fill"></i> Limited-time offer</span>
+        <h3 class="fw-bold mb-3">{{ modal_offer.title }}</h3>
+        <p class="text-secondary mb-4">{{ modal_offer.description }}</p>
+        <div class="d-flex justify-content-center gap-2">
+          {% if modal_offer.button_url %}
+            <a href="{{ modal_offer.button_url }}" class="btn btn-warning btn-lg px-4 fw-semibold">{{ modal_offer.button_text|default:"Shop Now" }}</a>
+          {% else %}
+            <a href="/vehicles/" class="btn btn-warning btn-lg px-4 fw-semibold">{{ modal_offer.button_text|default:"Browse Vehicles" }}</a>
+          {% endif %}
+          <button type="button" class="btn btn-outline-secondary btn-lg" data-bs-dismiss="modal">Not now</button>
+        </div>
+        {% if modal_offer.end_date %}
+          <p class="small text-secondary mt-3 mb-0">Offer valid till {{ modal_offer.end_date|date:"d M Y, h:i A" }}</p>
+        {% endif %}
+      </div>
+      <button type="button" class="btn-close position-absolute top-0 end-0 m-3 bg-white rounded-circle p-2"
+              data-bs-dismiss="modal" aria-label="Close"></button>
+    </div>
+  </div>
+</div>
+{% endif %}

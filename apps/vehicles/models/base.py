@@ -29,8 +29,10 @@ class SlugifiedModel(models.Model):
         if not self.slug:
             base = slugify(self.build_slug_source())[:200] or "item"
             slug, suffix = base, 1
-            qs = type(self)._default_manager
-            while qs.filter(**{"slug": slug, "pk__ne": self.pk}).exists():
+            qs = type(self)._default_manager.all()
+            if self.pk is not None:
+                qs = qs.exclude(pk=self.pk)
+            while qs.filter(slug=slug).exists():
                 suffix += 1
                 slug = f"{base}-{suffix}"
             self.slug = slug

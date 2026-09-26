@@ -1,3 +1,3 @@
-from .contact_request import ContactRequest, ContactStatus
+from .contact_request import PHONE_RE, ContactRequest, ContactStatus
 
-__all__ = ["ContactRequest", "ContactStatus"]
+__all__ = ["PHONE_RE", "ContactRequest", "ContactStatus"]

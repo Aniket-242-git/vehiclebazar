@@ -1,0 +1,53 @@
+{% load static %}
+{# Vehicle card used on home page and listing grid. Expects `vehicle` + optional `show_desc=True`. #}
+<div class="card h-100 shadow-sm vehicle-card border-0">
+  <a href="{{ vehicle.get_absolute_url }}" class="text-decoration-none">
+    <div class="position-relative overflow-hidden rounded-top">
+      {% if vehicle.primary_image and vehicle.primary_image.image %}
+        <img src="{{ vehicle.primary_image.image.url }}" alt="{{ vehicle.primary_image.alt_text|default:vehicle.title }}"
+             class="card-img-top vehicle-thumb" loading="lazy">
+      {% else %}
+        <div class="vehicle-thumb d-flex align-items-center justify-content-center bg-secondary bg-opacity-25">
+          <i class="bi bi-image display-4 text-secondary"></i>
+        </div>
+      {% endif %}
+      {% if vehicle.has_discount %}
+        <span class="badge text-bg-danger position-absolute top-0 start-0 m-2">OFFER PRICE</span>
+      {% endif %}
+      {% if vehicle.status == 'sold' %}
+        <span class="badge text-bg-dark position-absolute top-0 end-0 m-2">SOLD</span>
+      {% elif vehicle.status == 'reserved' %}
+        <span class="badge text-bg-warning position-absolute top-0 end-0 m-2">RESERVED</span>
+      {% endif %}
+      {% if vehicle.is_featured %}
+        <span class="badge text-bg-warning position-absolute bottom-0 start-0 m-2"><i class="bi bi-star-fill"></i> Featured</span>
+      {% endif %}
+    </div>
+  </a>
+  <div class="card-body">
+    <h6 class="card-title mb-1 text-truncate">
+      <a class="text-decoration-none text-dark stretched-title" href="{{ vehicle.get_absolute_url }}">{{ vehicle.title }}</a>
+    </h6>
+    <p class="text-secondary small mb-2">
+      {{ vehicle.brand.name }} · {{ vehicle.category.name }} · {{ vehicle.manufacturing_year }}
+    </p>
+    <div class="d-flex flex-wrap gap-2 small text-secondary mb-2">
+      <span><i class="bi bi-speedometer2"></i> {{ vehicle.km_driven }} km</span>
+      <span><i class="bi bi-fuel-pump"></i> {{ vehicle.get_fuel_type_display }}</span>
+      <span><i class="bi bi-gear"></i> {{ vehicle.get_transmission_display }}</span>
+    </div>
+    <p class="small text-secondary mb-2"><i class="bi bi-geo-alt"></i> {{ vehicle.location }}</p>
+    {% if show_desc %}<p class="small text-secondary text-truncate-2">{{ vehicle.description|truncatechars:90 }}</p>{% endif %}
+    <div class="d-flex justify-content-between align-items-center mt-auto">
+      <div>
+        {% if vehicle.has_discount %}
+          <span class="fs-5 fw-bold text-success">₹{{ vehicle.offer_price|floatformat:"0" }}</span>
+          <s class="small text-secondary">₹{{ vehicle.price|floatformat:"0" }}</s>
+        {% else %}
+          <span class="fs-5 fw-bold text-primary">₹{{ vehicle.price|floatformat:"0" }}</span>
+        {% endif %}
+      </div>
+      <a href="{{ vehicle.get_absolute_url }}" class="btn btn-sm btn-outline-primary">View Details</a>
+    </div>
+  </div>
+</div>
