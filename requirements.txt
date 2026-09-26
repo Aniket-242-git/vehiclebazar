@@ -24,21 +24,22 @@ python-dotenv>=1.0,<2.0           # Loads .env (SECRET_KEY, DB creds) - never co
 Pillow>=10.3,<11.0                # Prebuilt manylinux wheels exist -> safe on cPanel
 
 # =============================================================================
-# DATABASE DRIVER - install ONE of the following depending on your DB engine:
+# DATABASE STRATEGY: SQLite for development, MySQL for production.
 #
-# MySQL (cPanel default, DB_ENGINE=django.db.backends.mysql):
-#   mysqlclient          # preferred if pip can compile it (needs gcc +
-#                        # mysql-devel; often available on cPanel via
-#                        # "pip install mysqlclient" in the Python app UI)
-#   PyMySQL              # PURE-PYTHON fallback that always installs on shared
-#                        # hosting. If you use it, add this line to config/__init__.py:
-#                        #   import pymysql; pymysql.install_as_MySQLdb()
+# Development (config/settings/development.py):
+#   Uses SQLite automatically - ZERO extra packages required. Just run:
+#     python manage.py migrate && python manage.py runserver
 #
-# PostgreSQL (DB_ENGINE=django.db.backends.postgresql):
-#   psycopg2-binary      # prebuilt binary wheel, no compiler needed
+# Production (config/settings/production.py -> MySQL on cPanel):
+PyMySQL>=1.1,<2.0          # PURE-PYTHON MySQL driver - always installs on shared
+                           # hosting (no compiler needed). config/__init__.py
+                           # automatically registers it as MySQLdb.
+# mysqlclient              # OPTIONAL faster C driver if your host allows
+                           # compilation; PyMySQL is used automatically when
+                           # mysqlclient is absent.
 #
-# These are intentionally NOT pinned above because most shared hosts cannot
-# compile C extensions; enable the one matching your database.
+# PostgreSQL alternative (DB_ENGINE=django.db.backends.postgresql):
+#   psycopg2-binary        # prebuilt binary wheel, no compiler needed
 # =============================================================================
 
 # --- Production WSGI server (only used when you run your own process manager;

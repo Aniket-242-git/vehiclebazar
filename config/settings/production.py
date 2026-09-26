@@ -31,6 +31,16 @@ if DATABASES["default"]["ENGINE"].endswith("mysql"):  # noqa: F405
         "charset": "utf8mb4",
         "init_command": "SET sql_mode='STRICT_TRANS_TABLES'",
     }
+    # Give a clear deployment-time error instead of a confusing ImportError.
+    try:
+        import MySQLdb  # noqa: F401  (provided by mysqlclient or PyMySQL shim)
+    except ImportError:
+        raise RuntimeError(
+            "MySQL driver not found. Install one of:\n"
+            "  pip install mysqlclient   (preferred, needs compiler)\n"
+            "  pip install PyMySQL       (pure Python - works on cPanel shared hosting)\n"
+            "config/__init__.py automatically activates PyMySQL as MySQLdb."
+        ) from None
 
 # ------------------------------------------------------------------
 # HTTPS / security hardening
@@ -72,9 +82,14 @@ CACHES = {
 }
 
 # Log to file on shared hosts where stdout is not visible.
+# Create the logs directory up-front so logging configuration never fails
+# on a fresh deployment (e.g. cPanel) where the folder is absent.
+LOG_DIR = BASE_DIR / "logs"  # noqa: F405
+LOG_DIR.mkdir(parents=True, exist_ok=True)
+
 LOGGING["handlers"]["file"] = {  # noqa: F405
     "class": "logging.handlers.RotatingFileHandler",
-    "filename": BASE_DIR / "logs" / "django.log",  # noqa: F405
+    "filename": LOG_DIR / "django.log",
     "maxBytes": 2_000_000,
     "backupCount": 5,
     "formatter": "verbose",  # noqa: F405
