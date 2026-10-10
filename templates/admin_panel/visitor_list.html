@@ -1,0 +1,433 @@
+{% extends "admin_panel/base.html" %}
+{% block title %}Visitor Logs & Location Tracking{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+  <div>
+    <h4 class="fw-bold mb-0"><i class="bi bi-geo-alt-fill text-danger me-2"></i>Visitor Analytics &amp; Location</h4>
+    <p class="text-secondary small mb-0">
+      Track who visits your site, their device, exact visit time, and whether GPS location was shared.
+    </p>
+  </div>
+  <div class="d-flex gap-2 align-items-center flex-wrap">
+    <!-- Search Form -->
+    <form method="get" class="d-flex gap-2" role="search">
+      <input type="hidden" name="location" value="{{ loc_filter }}">
+      <input type="hidden" name="device" value="{{ device_filter }}">
+      <input type="hidden" name="period" value="{{ period }}">
+      <div class="input-group input-group-sm" style="min-width: 260px;">
+        <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-secondary"></i></span>
+        <input type="text" name="q" value="{{ q }}" class="form-control border-start-0"
+               placeholder="Search IP, City, State, Device, URL…">
+      </div>
+      <button class="btn btn-sm btn-dark" type="submit">Search</button>
+      {% if q or loc_filter or device_filter or period %}
+        <a href="{% url 'visitor_list' %}" class="btn btn-sm btn-outline-secondary">Reset</a>
+      {% endif %}
+    </form>
+
+    <!-- Prune / Clear Logs Dropdown -->
+    <div class="dropdown">
+      <button class="btn btn-sm btn-outline-danger dropdown-toggle" type="button" data-bs-toggle="dropdown">
+        <i class="bi bi-trash3 me-1"></i>Manage Logs
+      </button>
+      <ul class="dropdown-menu dropdown-menu-end shadow">
+        <li>
+          <form method="post" action="{% url 'visitor_clear' %}" onsubmit="return confirm('Clear logs older than 30 days?');">
+            {% csrf_token %}
+            <input type="hidden" name="scope" value="older_30">
+            <button type="submit" class="dropdown-item small text-warning"><i class="bi bi-clock-history me-2"></i>Clear logs older than 30 days</button>
+          </form>
+        </li>
+        <li><hr class="dropdown-divider"></li>
+        <li>
+          <form method="post" action="{% url 'visitor_clear' %}" onsubmit="return confirm('Are you sure you want to clear ALL visitor logs? This cannot be undone.');">
+            {% csrf_token %}
+            <input type="hidden" name="scope" value="all">
+            <button type="submit" class="dropdown-item small text-danger fw-semibold"><i class="bi bi-trash-fill me-2"></i>Delete ALL visitor logs</button>
+          </form>
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- Top KPI Summary Cards -->
+<div class="row g-3 mb-4">
+  <div class="col-6 col-md-3">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <span class="text-secondary small fw-semibold text-uppercase">Total Visits</span>
+          <span class="badge text-bg-primary bg-opacity-10 text-primary"><i class="bi bi-eye"></i></span>
+        </div>
+        <h3 class="fw-bold mb-1">{{ metrics.total|default:0 }}</h3>
+        <div class="small text-muted"><span class="badge text-bg-light border text-dark">{{ metrics.today|default:0 }}</span> visits today</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-6 col-md-3">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <span class="text-secondary small fw-semibold text-uppercase">Location Enabled</span>
+          <span class="badge text-bg-success bg-opacity-10 text-success"><i class="bi bi-geo-alt-fill"></i></span>
+        </div>
+        <h3 class="fw-bold mb-1 text-success">{{ metrics.with_location|default:0 }}</h3>
+        <div class="small text-secondary">{{ loc_pct }}% of all visitors shared location</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-6 col-md-3">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <span class="text-secondary small fw-semibold text-uppercase">Location Disabled</span>
+          <span class="badge text-bg-secondary bg-opacity-10 text-secondary"><i class="bi bi-geo-alt"></i></span>
+        </div>
+        <h3 class="fw-bold mb-1 text-secondary">{{ metrics.without_location|default:0 }}</h3>
+        <div class="small text-secondary">Logged time &amp; device without GPS</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-6 col-md-3">
+    <div class="card border-0 shadow-sm h-100">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <span class="text-secondary small fw-semibold text-uppercase">Devices</span>
+          <span class="badge text-bg-info bg-opacity-10 text-info"><i class="bi bi-phone"></i></span>
+        </div>
+        <div class="d-flex justify-content-between align-items-baseline mb-1">
+          <span class="small"><i class="bi bi-laptop me-1"></i>Desktop: <strong>{{ metrics.desktop|default:0 }}</strong></span>
+          <span class="small"><i class="bi bi-phone me-1"></i>Mobile: <strong>{{ metrics.mobile|default:0 }}</strong></span>
+        </div>
+        <div class="progress" style="height: 6px;">
+          <div class="progress-bar bg-primary" role="progressbar" style="width: {{ desktop_pct }}%" title="Desktop {{ desktop_pct }}%"></div>
+          <div class="progress-bar bg-success" role="progressbar" style="width: {{ mobile_pct }}%" title="Mobile {{ mobile_pct }}%"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Filter Tabs Bar -->
+<div class="card border-0 shadow-sm mb-3">
+  <div class="card-body py-2 px-3">
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+      <!-- Location Filter -->
+      <div class="d-flex align-items-center gap-1 flex-wrap">
+        <span class="small fw-semibold text-secondary me-2"><i class="bi bi-funnel me-1"></i>Location:</span>
+        <a href="?{% if device_filter %}device={{ device_filter }}&{% endif %}{% if period %}period={{ period }}&{% endif %}{% if q %}q={{ q|urlencode }}&{% endif %}"
+           class="badge {% if not loc_filter %}bg-dark text-white{% else %}bg-light text-secondary border{% endif %} text-decoration-none py-2 px-2">All</a>
+        <a href="?location=enabled{% if device_filter %}&device={{ device_filter }}{% endif %}{% if period %}&period={{ period }}{% endif %}{% if q %}&q={{ q|urlencode }}{% endif %}"
+           class="badge {% if loc_filter == 'enabled' %}bg-success text-white{% else %}bg-light text-secondary border{% endif %} text-decoration-none py-2 px-2">
+           <i class="bi bi-geo-alt-fill me-1"></i>Location Enabled ({{ metrics.with_location|default:0 }})
+        </a>
+        <a href="?location=disabled{% if device_filter %}&device={{ device_filter }}{% endif %}{% if period %}&period={{ period }}{% endif %}{% if q %}&q={{ q|urlencode }}{% endif %}"
+           class="badge {% if loc_filter == 'disabled' %}bg-secondary text-white{% else %}bg-light text-secondary border{% endif %} text-decoration-none py-2 px-2">
+           <i class="bi bi-x-circle me-1"></i>Location Disabled ({{ metrics.without_location|default:0 }})
+        </a>
+      </div>
+
+      <!-- Device & Period Quick Filters -->
+      <div class="d-flex align-items-center gap-2 flex-wrap">
+        <!-- Device dropdown -->
+        <div class="dropdown">
+          <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+            <i class="bi bi-phone me-1"></i>Device: <strong>{{ device_filter|default:"All"|capfirst }}</strong>
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+            <li><a class="dropdown-item {% if not device_filter %}active{% endif %}" href="?{% if loc_filter %}location={{ loc_filter }}&{% endif %}{% if period %}period={{ period }}&{% endif %}{% if q %}q={{ q|urlencode }}{% endif %}">All Devices</a></li>
+            {% for code, label in device_choices %}
+              <li><a class="dropdown-item {% if device_filter == code %}active{% endif %}" href="?device={{ code }}{% if loc_filter %}&location={{ loc_filter }}{% endif %}{% if period %}&period={{ period }}{% endif %}{% if q %}&q={{ q|urlencode }}{% endif %}">{{ label }}</a></li>
+            {% endfor %}
+          </ul>
+        </div>
+
+        <!-- Period dropdown -->
+        <div class="dropdown">
+          <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+            <i class="bi bi-calendar3 me-1"></i>Time: <strong>
+              {% if period == 'today' %}Today
+              {% elif period == '7days' %}Past 7 Days
+              {% elif period == '30days' %}Past 30 Days
+              {% else %}All Time{% endif %}
+            </strong>
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+            <li><a class="dropdown-item {% if not period %}active{% endif %}" href="?{% if loc_filter %}location={{ loc_filter }}&{% endif %}{% if device_filter %}device={{ device_filter }}&{% endif %}{% if q %}q={{ q|urlencode }}{% endif %}">All Time</a></li>
+            <li><a class="dropdown-item {% if period == 'today' %}active{% endif %}" href="?period=today{% if loc_filter %}&location={{ loc_filter }}{% endif %}{% if device_filter %}&device={{ device_filter }}{% endif %}{% if q %}&q={{ q|urlencode }}{% endif %}">Today</a></li>
+            <li><a class="dropdown-item {% if period == '7days' %}active{% endif %}" href="?period=7days{% if loc_filter %}&location={{ loc_filter }}{% endif %}{% if device_filter %}&device={{ device_filter }}{% endif %}{% if q %}&q={{ q|urlencode }}{% endif %}">Past 7 Days</a></li>
+            <li><a class="dropdown-item {% if period == '30days' %}active{% endif %}" href="?period=30days{% if loc_filter %}&location={{ loc_filter }}{% endif %}{% if device_filter %}&device={{ device_filter }}{% endif %}{% if q %}&q={{ q|urlencode }}{% endif %}">Past 30 Days</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Visitors Table -->
+<div class="card border-0 shadow-sm">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead class="table-light">
+        <tr>
+          <th style="min-width: 170px;">Visit Time</th>
+          <th style="min-width: 140px;">Location Status</th>
+          <th style="min-width: 220px;">Customer Location</th>
+          <th style="min-width: 180px;">Device &amp; OS</th>
+          <th style="min-width: 160px;">Browser</th>
+          <th style="min-width: 160px;">Visited Page</th>
+          <th style="min-width: 130px;">IP Address</th>
+          <th class="text-end" style="min-width: 110px;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for v in visitors %}
+          <tr>
+            <!-- Time -->
+            <td>
+              <div class="fw-semibold text-dark">{{ v.visited_at|date:"d M Y, H:i" }}</div>
+              <small class="text-secondary"><i class="bi bi-clock me-1"></i>{{ v.visited_at|timesince }} ago</small>
+            </td>
+
+            <!-- Location Status Badge -->
+            <td>
+              {% if v.location_enabled %}
+                <span class="badge text-bg-success px-2 py-1"><i class="bi bi-geo-alt-fill me-1"></i>Location Enabled</span>
+              {% else %}
+                <span class="badge text-bg-secondary px-2 py-1"><i class="bi bi-x-circle me-1"></i>Not Enabled</span>
+              {% endif %}
+            </td>
+
+            <!-- Customer Location -->
+            <td>
+              {% if v.location_enabled %}
+                <div class="fw-bold text-dark">{{ v.display_location }}</div>
+                {% if v.latitude and v.longitude %}
+                  <div class="small text-secondary">
+                    <span>{{ v.latitude|floatformat:4 }}, {{ v.longitude|floatformat:4 }}</span>
+                    {% if v.accuracy %}<span class="badge bg-light text-muted border ms-1">±{{ v.accuracy|floatformat:0 }}m</span>{% endif %}
+                  </div>
+                {% endif %}
+              {% else %}
+                <span class="text-muted small fst-italic"><i class="bi bi-shield-lock me-1"></i>Location Not Shared</span>
+              {% endif %}
+            </td>
+
+            <!-- Device & OS -->
+            <td>
+              <div class="d-flex align-items-center">
+                <i class="bi {{ v.device_icon }} fs-5 me-2 text-primary"></i>
+                <div>
+                  <div class="fw-semibold text-dark">{{ v.get_device_type_display }}</div>
+                  <small class="text-secondary">{{ v.os|default:"Unknown OS" }}</small>
+                </div>
+              </div>
+            </td>
+
+            <!-- Browser -->
+            <td>
+              <div class="text-dark fw-semibold small">{{ v.browser }}</div>
+              <small class="text-secondary">
+                {% if v.screen_resolution %}<i class="bi bi-aspect-ratio me-1"></i>{{ v.screen_resolution }}{% else %}{{ v.language|default:"-" }}{% endif %}
+              </small>
+            </td>
+
+            <!-- Page -->
+            <td>
+              <div class="text-truncate" style="max-width: 180px;" title="{{ v.page_url }}">
+                <a href="{{ v.page_url }}" target="_blank" class="text-decoration-none small font-monospace text-dark">
+                  {{ v.page_url|default:"/" }}
+                </a>
+              </div>
+              {% if v.referrer %}
+                <div class="small text-muted text-truncate" style="max-width: 180px;" title="Referrer: {{ v.referrer }}">
+                  <i class="bi bi-arrow-return-right me-1"></i>{{ v.referrer }}
+                </div>
+              {% endif %}
+            </td>
+
+            <!-- IP Address -->
+            <td>
+              <code class="text-secondary small">{{ v.ip_address|default:"-" }}</code>
+            </td>
+
+            <!-- Actions -->
+            <td class="text-end text-nowrap">
+              {% if v.google_maps_url %}
+                <a href="{{ v.google_maps_url }}" target="_blank" class="btn btn-sm btn-outline-success py-1 px-2" title="Open Google Maps">
+                  <i class="bi bi-map-fill"></i>
+                </a>
+              {% endif %}
+
+              <!-- Details button triggering modal -->
+              <button type="button" class="btn btn-sm btn-outline-secondary py-1 px-2"
+                      data-bs-toggle="modal" data-bs-target="#visitorModal{{ v.id }}" title="View Full Details">
+                <i class="bi bi-info-circle"></i>
+              </button>
+
+              <!-- Delete button -->
+              <form method="post" action="{% url 'visitor_delete' v.pk %}" class="d-inline"
+                    onsubmit="return confirm('Delete this visitor log?');">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sm btn-outline-danger py-1 px-2" title="Delete record">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </form>
+
+              <!-- Details Modal -->
+              <div class="modal fade text-start" id="visitorModal{{ v.id }}" tabindex="-1" aria-labelledby="visitorModalLabel{{ v.id }}" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered modal-lg">
+                  <div class="modal-content shadow border-0">
+                    <div class="modal-header bg-light">
+                      <h5 class="modal-title fw-bold" id="visitorModalLabel{{ v.id }}">
+                        <i class="bi bi-person-badge me-2 text-primary"></i>Visitor Record #{{ v.id }}
+                      </h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                      <!-- Status Banner -->
+                      <div class="alert {% if v.location_enabled %}alert-success{% else %}alert-secondary{% endif %} d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                          <strong>Location Status:</strong>
+                          {% if v.location_enabled %}
+                            <span class="badge text-bg-success ms-1">Enabled / Granted</span>
+                          {% else %}
+                            <span class="badge text-bg-secondary ms-1">{{ v.get_location_status_display }}</span>
+                          {% endif %}
+                        </div>
+                        <div class="small text-muted">{{ v.visited_at|date:"d M Y, H:i:s" }}</div>
+                      </div>
+
+                      <div class="row g-3">
+                        <!-- Location section -->
+                        <div class="col-md-6">
+                          <div class="border rounded p-3 h-100 bg-white">
+                            <h6 class="fw-bold text-primary mb-3"><i class="bi bi-geo-alt-fill me-1"></i>Location Information</h6>
+                            <ul class="list-unstyled mb-0 small">
+                              <li class="mb-2"><strong>City:</strong> {{ v.city|default:"Not available" }}</li>
+                              <li class="mb-2"><strong>State / Region:</strong> {{ v.state_region|default:"Not available" }}</li>
+                              <li class="mb-2"><strong>Country:</strong> {{ v.country|default:"Not available" }}</li>
+                              <li class="mb-2"><strong>Postal Code:</strong> {{ v.postal_code|default:"Not available" }}</li>
+                              <li class="mb-2"><strong>Coordinates:</strong>
+                                {% if v.latitude and v.longitude %}
+                                  <code>{{ v.latitude }}, {{ v.longitude }}</code>
+                                  <a href="{{ v.google_maps_url }}" target="_blank" class="ms-1 btn btn-sm btn-outline-success py-0 px-1">View Map</a>
+                                {% else %}
+                                  <span class="text-muted">None</span>
+                                {% endif %}
+                              </li>
+                              <li class="mb-2"><strong>Accuracy:</strong> {% if v.accuracy %}{{ v.accuracy|floatformat:1 }} meters{% else %}-{% endif %}</li>
+                              {% if v.address %}
+                                <li class="mb-0"><strong>Full Address:</strong><br><span class="text-secondary">{{ v.address }}</span></li>
+                              {% endif %}
+                            </ul>
+                          </div>
+                        </div>
+
+                        <!-- Device section -->
+                        <div class="col-md-6">
+                          <div class="border rounded p-3 h-100 bg-white">
+                            <h6 class="fw-bold text-dark mb-3"><i class="bi bi-laptop me-1"></i>Device &amp; Browser</h6>
+                            <ul class="list-unstyled mb-0 small">
+                              <li class="mb-2"><strong>Device Type:</strong> {{ v.get_device_type_display }}</li>
+                              <li class="mb-2"><strong>Operating System:</strong> {{ v.os|default:"Unknown" }}</li>
+                              <li class="mb-2"><strong>Browser:</strong> {{ v.browser }} {{ v.browser_version }}</li>
+                              <li class="mb-2"><strong>Screen Resolution:</strong> {{ v.screen_resolution|default:"Not detected" }}</li>
+                              <li class="mb-2"><strong>Language:</strong> {{ v.language|default:"Not detected" }}</li>
+                              <li class="mb-2"><strong>IP Address:</strong> <code>{{ v.ip_address }}</code></li>
+                              <li class="mb-0"><strong>Session Key:</strong> <code>{{ v.session_key|default:"-" }}</code></li>
+                            </ul>
+                          </div>
+                        </div>
+
+                        <!-- Page / Navigation details -->
+                        <div class="col-12">
+                          <div class="border rounded p-3 bg-white">
+                            <h6 class="fw-bold text-dark mb-2"><i class="bi bi-compass me-1"></i>Browsing Information</h6>
+                            <div class="small mb-2"><strong>Page Visited:</strong> <code class="text-primary">{{ v.page_url }}</code></div>
+                            <div class="small mb-2"><strong>Referrer:</strong> <span class="text-muted">{{ v.referrer|default:"Direct visit" }}</span></div>
+                            <div class="small">
+                              <strong>Raw User-Agent:</strong>
+                              <div class="p-2 mt-1 bg-light rounded text-secondary font-monospace" style="font-size: 0.75rem; word-break: break-all;">
+                                {{ v.user_agent|default:"None" }}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="modal-footer bg-light py-2">
+                      {% if v.google_maps_url %}
+                        <a href="{{ v.google_maps_url }}" target="_blank" class="btn btn-sm btn-success">
+                          <i class="bi bi-map me-1"></i>Open in Google Maps
+                        </a>
+                      {% endif %}
+                      <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="8" class="text-center py-5 text-secondary">
+              <i class="bi bi-inbox display-4 d-block mb-2 text-muted"></i>
+              No visitors found{% if q or loc_filter or device_filter or period %} matching the selected filters{% endif %}.
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  {% if page_obj.has_other_pages %}
+    <div class="card-footer bg-white d-flex justify-content-between align-items-center py-3">
+      <div class="small text-secondary">
+        Showing {{ page_obj.start_index }} to {{ page_obj.end_index }} of {{ page_obj.paginator.count }} visitors
+      </div>
+      <nav>
+        <ul class="pagination pagination-sm mb-0">
+          {% if page_obj.has_previous %}
+            <li class="page-item">
+              <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if loc_filter %}&location={{ loc_filter }}{% endif %}{% if device_filter %}&device={{ device_filter }}{% endif %}{% if period %}&period={{ period }}{% endif %}{% if q %}&q={{ q|urlencode }}{% endif %}">
+                &laquo; Prev
+              </a>
+            </li>
+          {% else %}
+            <li class="page-item disabled"><span class="page-link">&laquo; Prev</span></li>
+          {% endif %}
+
+          {% for num in page_obj.paginator.page_range %}
+            {% if num == page_obj.number %}
+              <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+              <li class="page-item">
+                <a class="page-link" href="?page={{ num }}{% if loc_filter %}&location={{ loc_filter }}{% endif %}{% if device_filter %}&device={{ device_filter }}{% endif %}{% if period %}&period={{ period }}{% endif %}{% if q %}&q={{ q|urlencode }}{% endif %}">
+                  {{ num }}
+                </a>
+              </li>
+            {% endif %}
+          {% endfor %}
+
+          {% if page_obj.has_next %}
+            <li class="page-item">
+              <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if loc_filter %}&location={{ loc_filter }}{% endif %}{% if device_filter %}&device={{ device_filter }}{% endif %}{% if period %}&period={{ period }}{% endif %}{% if q %}&q={{ q|urlencode }}{% endif %}">
+                Next &raquo;
+              </a>
+            </li>
+          {% else %}
+            <li class="page-item disabled"><span class="page-link">Next &raquo;</span></li>
+          {% endif %}
+        </ul>
+      </nav>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -18,6 +18,7 @@ urlpatterns = [
     path("", include("apps.vehicles.urls")),
     path("", include("apps.contacts.urls")),
     path("", include("apps.offers.urls")),
+    path("", include("apps.visitors.urls")),
     # DRF browsable API root (handy during development)
     path("api-auth/", include("rest_framework.urls")),
 ]

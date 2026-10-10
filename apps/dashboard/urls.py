@@ -63,4 +63,8 @@ urlpatterns = [
         dashboard_view.contact_request_update,
         name="contact_request_update",
     ),
+    # --- Visitor Analytics ----------------------------------------------
+    path("visitors/", dashboard_view.visitor_list, name="visitor_list"),
+    path("visitors/<int:pk>/delete/", dashboard_view.visitor_delete, name="visitor_delete"),
+    path("visitors/clear/", dashboard_view.visitor_clear, name="visitor_clear"),
 ]

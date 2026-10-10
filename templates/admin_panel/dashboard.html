@@ -31,31 +31,37 @@
     </div>
   </div>
   <div class="col-6 col-md-4 col-xl-2">
-    <div class="card border-0 shadow-sm stat-card h-100">
-      <div class="card-body text-center">
-        <div class="stat-icon bg-dark bg-opacity-10 text-dark mx-auto"><i class="bi bi-bag-check"></i></div>
-        <h3 class="fw-bold mb-0">{{ stats.sold|default:0 }}</h3>
-        <div class="small text-secondary">Sold Vehicles</div>
+    <a href="/admin-panel/visitors/" class="text-decoration-none">
+      <div class="card border-0 shadow-sm stat-card h-100">
+        <div class="card-body text-center">
+          <div class="stat-icon bg-info bg-opacity-10 text-info mx-auto"><i class="bi bi-people"></i></div>
+          <h3 class="fw-bold mb-0 text-dark">{{ visitor_stats.total|default:0 }}</h3>
+          <div class="small text-secondary">Visitors ({{ visitor_stats.today|default:0 }} today)</div>
+        </div>
       </div>
-    </div>
+    </a>
   </div>
   <div class="col-6 col-md-4 col-xl-2">
-    <div class="card border-0 shadow-sm stat-card h-100">
-      <div class="card-body text-center">
-        <div class="stat-icon bg-info bg-opacity-10 text-info mx-auto"><i class="bi bi-tags"></i></div>
-        <h3 class="fw-bold mb-0">{{ total_categories }}</h3>
-        <div class="small text-secondary">Categories</div>
+    <a href="/admin-panel/visitors/?location=enabled" class="text-decoration-none">
+      <div class="card border-0 shadow-sm stat-card h-100">
+        <div class="card-body text-center">
+          <div class="stat-icon bg-success bg-opacity-10 text-success mx-auto"><i class="bi bi-geo-alt"></i></div>
+          <h3 class="fw-bold mb-0 text-success">{{ visitor_stats.with_location|default:0 }}</h3>
+          <div class="small text-secondary">Location Shared</div>
+        </div>
       </div>
-    </div>
+    </a>
   </div>
   <div class="col-6 col-md-4 col-xl-2">
-    <div class="card border-0 shadow-sm stat-card h-100">
-      <div class="card-body text-center">
-        <div class="stat-icon bg-warning bg-opacity-10 text-warning mx-auto"><i class="bi bi-envelope"></i></div>
-        <h3 class="fw-bold mb-0">{{ contact_stats.total|default:0 }}</h3>
-        <div class="small text-secondary">Contact Requests</div>
+    <a href="/admin-panel/contact-requests/" class="text-decoration-none">
+      <div class="card border-0 shadow-sm stat-card h-100">
+        <div class="card-body text-center">
+          <div class="stat-icon bg-warning bg-opacity-10 text-warning mx-auto"><i class="bi bi-envelope"></i></div>
+          <h3 class="fw-bold mb-0 text-dark">{{ contact_stats.total|default:0 }}</h3>
+          <div class="small text-secondary">Contact Requests</div>
+        </div>
       </div>
-    </div>
+    </a>
   </div>
   <div class="col-6 col-md-4 col-xl-2">
     <div class="card border-0 shadow-sm stat-card h-100">
@@ -128,6 +134,83 @@
       </ul>
       <div class="card-footer bg-white text-end border-0">
         <a href="/admin-panel/contact-requests/" class="btn btn-sm btn-outline-dark">View all requests</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Recent Website Visitors -->
+<div class="row g-4 mt-1">
+  <div class="col-12">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <span class="fw-semibold"><i class="bi bi-geo-alt-fill text-danger me-1"></i>Recent Website Visitors</span>
+        <a href="/admin-panel/visitors/" class="btn btn-sm btn-outline-primary">View All Visitor Logs</a>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>Time</th>
+              <th>Location Status</th>
+              <th>Location / Address</th>
+              <th>Device & Browser</th>
+              <th>Page Visited</th>
+              <th>IP Address</th>
+              <th class="text-end">Map</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for v in recent_visitors %}
+              <tr>
+                <td class="small text-nowrap">
+                  <div class="fw-semibold">{{ v.visited_at|date:"d M Y, H:i" }}</div>
+                  <div class="text-secondary small">{{ v.visited_at|timesince }} ago</div>
+                </td>
+                <td>
+                  {% if v.location_enabled %}
+                    <span class="badge text-bg-success"><i class="bi bi-geo-alt me-1"></i>Location Enabled</span>
+                  {% else %}
+                    <span class="badge text-bg-secondary"><i class="bi bi-x-circle me-1"></i>Not Enabled</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if v.location_enabled %}
+                    <div class="fw-semibold text-dark">{{ v.display_location }}</div>
+                    {% if v.latitude and v.longitude %}
+                      <small class="text-secondary">{{ v.latitude|floatformat:4 }}, {{ v.longitude|floatformat:4 }} (±{{ v.accuracy|default:"?"|floatformat:0 }}m)</small>
+                    {% endif %}
+                  {% else %}
+                    <span class="text-secondary small fst-italic">Location permission not granted</span>
+                  {% endif %}
+                </td>
+                <td class="small">
+                  <div><i class="bi {{ v.device_icon }} me-1"></i><strong>{{ v.get_device_type_display }}</strong> · {{ v.os|default:"Unknown OS" }}</div>
+                  <div class="text-secondary">{{ v.browser }} {{ v.browser_version }}</div>
+                </td>
+                <td class="small text-truncate" style="max-width:180px;">
+                  <code class="text-dark">{{ v.page_url|default:"/" }}</code>
+                </td>
+                <td class="small text-secondary font-monospace">{{ v.ip_address }}</td>
+                <td class="text-end">
+                  {% if v.google_maps_url %}
+                    <a href="{{ v.google_maps_url }}" target="_blank" class="btn btn-sm btn-outline-success py-0 px-2" title="Open in Google Maps">
+                      <i class="bi bi-map me-1"></i>Maps
+                    </a>
+                  {% else %}
+                    <span class="text-muted small">-</span>
+                  {% endif %}
+                </td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="7" class="text-center text-secondary py-4">
+                  No visitors recorded yet. Visitors will show up here as they browse your site.
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
       </div>
     </div>
   </div>

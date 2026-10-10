@@ -68,6 +68,7 @@ INSTALLED_APPS = [
     "apps.contacts",
     "apps.offers",
     "apps.dashboard",
+    "apps.visitors",
 ]
 
 MIDDLEWARE = [

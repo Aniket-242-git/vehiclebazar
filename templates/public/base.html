@@ -31,9 +31,11 @@
 
   {% include "components/footer.html" %}
   {% include "components/offer_modal.html" %}
+  {% include "components/location_prompt.html" %}
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="{% static 'js/main.js' %}"></script>
+  <script src="{% static 'js/visitor_tracker.js' %}"></script>
   {% block extra_js %}{% endblock %}
 </body>
 </html>
