@@ -41,11 +41,13 @@ def home(request):
 
     featured = list(VehicleService.featured_vehicles(limit=8))
     latest = list(VehicleService.latest_vehicles(limit=10))
+    hot_deal = next((v for v in featured if v.has_discount), featured[0] if featured else None)
 
     context = {
         "banner_slides": BannerService.live_slides(),
         "featured": featured,
         "latest": latest,
+        "hot_deal": hot_deal,
         "categories": Category.objects.filter(is_active=True)[:8],
         "brands": Brand.objects.filter(is_active=True)[:12],
     }

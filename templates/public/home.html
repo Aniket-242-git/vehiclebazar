@@ -1,4 +1,5 @@
-{% load static %}{% extends "public/base.html" %}
+{% extends "public/base.html" %}
+{% load static %}
 
 {% block content %}
 {# ================= Flipkart/Amazon-style landing page ================= #}
@@ -72,78 +73,84 @@
       {# ---- admin-fed slides (image / GIF / video) ---- #}
       {% for slide in banner_slides %}
         <div class="carousel-item {% if forloop.first %}active{% endif %}">
-          {% if slide.link_url %}<a href="{{ slide.link_url }}" class="d-block text-decoration-none">{% endif %}
-          <div class="banner-slide position-relative overflow-hidden">
-            {% if slide.has_video %}
-              <video class="banner-media" src="{{ slide.video.url }}" autoplay muted loop playsinline></video>
-            {% elif slide.image %}
-              <img src="{{ slide.image.url }}" alt="{{ slide.title }}" class="banner-media" loading="eager">
-            {% else %}
-              <div class="banner-media banner-gradient bg-festive"></div>
-            {% endif %}
+          <a href="{{ slide.link_url|default:'/vehicles/' }}" class="d-block text-decoration-none">
+            <div class="banner-slide position-relative overflow-hidden">
+              {% if slide.has_video %}
+                <video class="banner-media" src="{{ slide.video.url }}" autoplay muted loop playsinline></video>
+              {% elif slide.image %}
+                <img src="{{ slide.image.url }}" alt="{{ slide.title }}" class="banner-media" loading="eager">
+              {% else %}
+                <img src="https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=1600&q=80" alt="{{ slide.title }}" class="banner-media" loading="eager">
+              {% endif %}
 
-            {# overlay content – discount sticker, badge pill, heading, CTA #}
-            <div class="banner-overlay">
-              <div>
-                {% if slide.badge_text %}
-                  <span class="badge banner-badge text-bg-{{ slide.badge_color|default:'danger' }}">{{ slide.badge_text }}</span>
-                {% endif %}
-                {% if slide.heading %}<h3 class="banner-heading mt-2 mb-1">{{ slide.heading }}</h3>{% endif %}
-                {% if slide.subtext %}<p class="banner-subtext mb-2">{{ slide.subtext }}</p>{% endif %}
-                {% if slide.cta_text %}
-                  <span class="btn btn-light btn-sm fw-semibold banner-cta">{{ slide.cta_text }} <i class="bi bi-arrow-right"></i></span>
+              {# overlay content – discount sticker, badge pill, heading, CTA #}
+              <div class="banner-overlay">
+                <div>
+                  {% if slide.badge_text %}
+                    <span class="badge banner-badge text-bg-{{ slide.badge_color|default:'danger' }}">{{ slide.badge_text }}</span>
+                  {% endif %}
+                  {% if slide.heading %}<h3 class="banner-heading mt-2 mb-1">{{ slide.heading }}</h3>{% endif %}
+                  {% if slide.subtext %}<p class="banner-subtext mb-2">{{ slide.subtext }}</p>{% endif %}
+                  {% if slide.cta_text %}
+                    <span class="btn btn-light btn-sm fw-semibold banner-cta">{{ slide.cta_text }} <i class="bi bi-arrow-right"></i></span>
+                  {% endif %}
+                </div>
+                {% if slide.discount_label %}
+                  <div class="discount-sticker">{{ slide.discount_label }}</div>
                 {% endif %}
               </div>
-              {% if slide.discount_label %}
-                <div class="discount-sticker">{{ slide.discount_label }}</div>
-              {% endif %}
             </div>
-          </div>
-          {% if slide.link_url %}</a>{% endif %}
+          </a>
         </div>
       {% empty %}
-        {# ---- built-in demo slides so the carousel is never empty ---- #}
+        {# ---- built-in demo slides with REAL images so carousel is never plain gradient ---- #}
         <div class="carousel-item active">
-          <div class="banner-slide position-relative overflow-hidden">
-            <div class="banner-media banner-gradient bg-festive"></div>
-            <div class="banner-overlay">
-              <div>
-                <span class="badge banner-badge text-bg-danger">Deal of the Day</span>
-                <h3 class="banner-heading mt-2 mb-1">Mega Vehicle Sale is LIVE!</h3>
-                <p class="banner-subtext mb-2">Certified used cars &amp; bikes · Free inspection report on every listing</p>
-                <a class="btn btn-light btn-sm fw-semibold banner-cta" href="{% url 'vehicle_list' %}">Shop Now <i class="bi bi-arrow-right"></i></a>
+          <a href="{% url 'vehicle_list' %}" class="d-block text-decoration-none">
+            <div class="banner-slide position-relative overflow-hidden">
+              <img src="https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=1600&q=80" alt="Mega Vehicle Sale" class="banner-media" loading="eager">
+              <div class="banner-overlay">
+                <div>
+                  <span class="badge banner-badge text-bg-danger">Deal of the Day</span>
+                  <h3 class="banner-heading mt-2 mb-1">Mega Vehicle Sale is LIVE!</h3>
+                  <p class="banner-subtext mb-2">Certified used cars &amp; bikes · Free inspection report on every listing</p>
+                  <span class="btn btn-light btn-sm fw-semibold banner-cta">Shop Now <i class="bi bi-arrow-right"></i></span>
+                </div>
+                <div class="discount-sticker">Up to 40% OFF</div>
               </div>
-              <div class="discount-sticker">Up to 40% OFF</div>
             </div>
-          </div>
+          </a>
         </div>
         <div class="carousel-item">
-          <div class="banner-slide position-relative overflow-hidden">
-            <div class="banner-media banner-gradient bg-ocean"></div>
-            <div class="banner-overlay">
-              <div>
-                <span class="badge banner-badge text-bg-warning">Festive Offer</span>
-                <h3 class="banner-heading mt-2 mb-1">Zero Down Payment · No-Cost EMI</h3>
-                <p class="banner-subtext mb-2">Drive home today, pay later. Instant loan approval in 15 minutes.</p>
-                <a class="btn btn-light btn-sm fw-semibold banner-cta" href="{% url 'vehicle_list' %}?sort=price_asc">Explore Deals <i class="bi bi-arrow-right"></i></a>
+          <a href="{% url 'vehicle_list' %}?sort=price_asc" class="d-block text-decoration-none">
+            <div class="banner-slide position-relative overflow-hidden">
+              <img src="https://images.unsplash.com/photo-1519641471654-76ce0107ad1b?auto=format&fit=crop&w=1600&q=80" alt="Zero Down Payment" class="banner-media" loading="lazy">
+              <div class="banner-overlay">
+                <div>
+                  <span class="badge banner-badge text-bg-warning">Festive Offer</span>
+                  <h3 class="banner-heading mt-2 mb-1">Zero Down Payment · No-Cost EMI</h3>
+                  <p class="banner-subtext mb-2">Drive home today, pay later. Instant loan approval in 15 minutes.</p>
+                  <span class="btn btn-light btn-sm fw-semibold banner-cta">Explore Deals <i class="bi bi-arrow-right"></i></span>
+                </div>
+                <div class="discount-sticker">Flat ₹50,000 OFF</div>
               </div>
-              <div class="discount-sticker">Flat ₹50,000 OFF</div>
             </div>
-          </div>
+          </a>
         </div>
         <div class="carousel-item">
-          <div class="banner-slide position-relative overflow-hidden">
-            <div class="banner-media banner-gradient bg-sunset"></div>
-            <div class="banner-overlay">
-              <div>
-                <span class="badge banner-badge text-bg-success">Bike Week</span>
-                <h3 class="banner-heading mt-2 mb-1">Two-Wheeler Bonanza</h3>
-                <p class="banner-subtext mb-2">Scooters &amp; bikes starting at just ₹45,000. Limited stock!</p>
-                <a class="btn btn-light btn-sm fw-semibold banner-cta" href="{% url 'vehicle_list' %}">Ride Home Now <i class="bi bi-arrow-right"></i></a>
+          <a href="{% url 'vehicle_list' %}?category=motorcycles" class="d-block text-decoration-none">
+            <div class="banner-slide position-relative overflow-hidden">
+              <img src="https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=1600&q=80" alt="Two-Wheeler Bonanza" class="banner-media" loading="lazy">
+              <div class="banner-overlay">
+                <div>
+                  <span class="badge banner-badge text-bg-success">Bike Week</span>
+                  <h3 class="banner-heading mt-2 mb-1">Two-Wheeler Bonanza</h3>
+                  <p class="banner-subtext mb-2">Scooters &amp; bikes starting at just ₹45,000. Limited stock!</p>
+                  <span class="btn btn-light btn-sm fw-semibold banner-cta">Ride Home Now <i class="bi bi-arrow-right"></i></span>
+                </div>
+                <div class="discount-sticker">-30% OFF</div>
               </div>
-              <div class="discount-sticker">-30% OFF</div>
             </div>
-          </div>
+          </a>
         </div>
       {% endfor %}
     </div>
@@ -155,10 +162,10 @@
       <span class="carousel-control-next-icon banner-nav-icon" aria-hidden="true"></span><span class="visually-hidden">Next</span>
     </button>
   </div>
-  <p class="small text-muted mt-2 mb-0 text-end">
+  <!-- <p class="small text-muted mt-2 mb-0 text-end">
     <i class="bi bi-info-circle me-1"></i>Banners, offers &amp; discount labels are 100% dynamic — add/edit them anytime from
     <a href="/admin-panel/banners/" class="fw-semibold">Admin Panel → Homepage Banners</a>.
-  </p>
+  </p> -->
 </section>
 
 {# ---------- 3. Deal strip / offer icons ---------- #}
@@ -243,7 +250,35 @@
   </section>
 
   {# ---------- 6. Big promo strip: flash sale ---------- #}
-  {% if show_demo %}
+  {% if hot_deal %}
+  <section class="mb-5">
+    <div class="row g-0 hot-deal-strip rounded-4 overflow-hidden shadow-sm">
+      <div class="col-md-7 d-flex flex-column justify-content-center p-4 p-lg-5 text-white hot-deal-copy">
+        <span class="badge text-bg-warning align-self-start mb-2 px-3 py-2"><i class="bi bi-lightning-charge-fill me-1"></i>LIMITED TIME FEATURED DEAL</span>
+        <h3 class="fw-bold mb-1">{{ hot_deal.title }}</h3>
+        <p class="mb-3 opacity-75">{{ hot_deal.brand.name }} · {{ hot_deal.category.name }} · {{ hot_deal.manufacturing_year }} · {{ hot_deal.km_driven|floatformat:"g" }} km · {{ hot_deal.location }}</p>
+        <div class="d-flex align-items-center gap-3 mb-3 flex-wrap">
+          {% if hot_deal.has_discount %}
+            <span class="fs-3 fw-bold">₹{{ hot_deal.offer_price|floatformat:"0" }}</span>
+            <s class="opacity-50">₹{{ hot_deal.price|floatformat:"0" }}</s>
+            <span class="badge text-bg-danger fs-6">SAVE ₹{{ hot_deal.discount_amount|floatformat:"0" }}</span>
+          {% else %}
+            <span class="fs-3 fw-bold">₹{{ hot_deal.price|floatformat:"0" }}</span>
+          {% endif %}
+        </div>
+        <div class="d-flex gap-2">
+          <a href="{{ hot_deal.get_absolute_url }}" class="btn btn-warning fw-bold px-4">View Vehicle</a>
+          <a href="{% url 'contact_us' %}" class="btn btn-outline-light">Ask a Question</a>
+        </div>
+      </div>
+      <div class="col-md-5 hot-deal-img">
+        {% if hot_deal.primary_image and hot_deal.primary_image.image %}
+          <img src="{{ hot_deal.primary_image.image.url }}" alt="{{ hot_deal.title }}" class="w-100 h-100" style="object-fit:cover;" loading="lazy">
+        {% endif %}
+      </div>
+    </div>
+  </section>
+  {% elif show_demo %}
   <section class="mb-5">
     <div class="row g-0 hot-deal-strip rounded-4 overflow-hidden shadow-sm">
       <div class="col-md-7 d-flex flex-column justify-content-center p-4 p-lg-5 text-white hot-deal-copy">
