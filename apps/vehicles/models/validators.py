@@ -11,9 +11,12 @@ def validate_image_upload(file) -> None:
     """Validate extension, size and magic-number signature of an upload.
 
     Never trust the client-provided content type; we sniff the first bytes.
+    Animated GIFs are accepted too (used by category tiles / banners).
     """
     max_bytes = getattr(settings, "MAX_UPLOAD_SIZE_MB", 5) * 1024 * 1024
-    allowed_ext = getattr(settings, "ALLOWED_IMAGE_EXTENSIONS", {"jpg", "jpeg", "png", "webp"})
+    allowed_ext = getattr(
+        settings, "ALLOWED_IMAGE_EXTENSIONS", {"jpg", "jpeg", "png", "webp", "gif"}
+    )
 
     name = getattr(file, "name", "") or ""
     ext = os.path.splitext(name)[1].lower().lstrip(".")
@@ -31,9 +34,19 @@ def validate_image_upload(file) -> None:
     if hasattr(file, "seek"):
         file.seek(pos)
 
-    signatures = getattr(settings, "ALLOWED_IMAGE_MAGIC", {})
+    signatures = getattr(
+        settings,
+        "ALLOWED_IMAGE_MAGIC",
+        {
+            b"\xff\xd8\xff": "image/jpeg",
+            b"\x89PNG\r\n\x1a\n": "image/png",
+            b"RIFF": "image/webp",
+            b"GIF87a": "image/gif",
+            b"GIF89a": "image/gif",
+        },
+    )
     if not any(header.startswith(sig) for sig in signatures):
-        raise ValidationError("File content does not look like a valid JPEG/PNG/WEBP image.")
+        raise ValidationError("File content does not look like a valid JPEG/PNG/WEBP/GIF image.")
 
 
 def validate_media_upload(file) -> None:

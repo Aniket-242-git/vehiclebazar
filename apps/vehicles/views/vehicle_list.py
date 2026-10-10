@@ -27,13 +27,34 @@ SORT_CHOICES = [
 
 
 def home(request):
-    """Landing page: hero + featured + latest vehicles."""
+    """Landing page – Flipkart/Amazon style.
+
+    Everything shown here is admin-manageable:
+      * banner carousel slides (image / GIF / video + discount labels)
+      * "shop by category" tiles, deal strip, brand row
+      * featured vehicles & latest arrivals
+    With no vehicles in the DB yet, an attractive dummy catalogue is shown so
+    the page never looks empty; real listings automatically replace it.
+    """
+    from apps.offers.services import BannerService
+    from apps.vehicles.services.home_demo import get_demo_data
+
+    featured = list(VehicleService.featured_vehicles(limit=8))
+    latest = list(VehicleService.latest_vehicles(limit=10))
+
     context = {
-        "featured": VehicleService.featured_vehicles(limit=6),
-        "latest": VehicleService.latest_vehicles(limit=6),
+        "banner_slides": BannerService.live_slides(),
+        "featured": featured,
+        "latest": latest,
         "categories": Category.objects.filter(is_active=True)[:8],
         "brands": Brand.objects.filter(is_active=True)[:12],
     }
+
+    # Fallback demo data (dummy categories / deals / vehicles) so the new
+    # landing sections always render while the admin feeds real records.
+    if not featured and not latest:
+        context.update(get_demo_data())
+        context["show_demo"] = True
     return render(request, "public/home.html", context)
 
 
