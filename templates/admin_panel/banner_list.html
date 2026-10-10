@@ -1,0 +1,48 @@
+{% extends "admin_panel/model_list.html" %}
+{% block table_head %}
+  <th style="width:120px;">Preview</th><th>Slide</th><th>Media</th><th>Discount / Badge</th><th>Window (start → end)</th><th>Order</th><th>Status</th>
+{% endblock %}
+{% block table_row %}
+  <tr>
+    <td>
+      {% if item.image %}<img src="{{ item.image.url }}" alt="" class="rounded shadow-sm" width="106" height="56" style="object-fit:cover;">
+      {% elif item.video %}<video src="{{ item.video.url }}" muted width="106" height="56" style="object-fit:cover;" class="rounded"></video>
+      {% else %}<span class="badge text-bg-light border"><i class="bi bi-image"></i></span>{% endif %}
+    </td>
+    <td>
+      <a href="/admin-panel/banners/{{ item.pk }}/edit/" class="fw-semibold text-decoration-none">{{ item.title }}</a>
+      <div class="small text-muted text-truncate" style="max-width:240px;">{{ item.heading|default:"(no overlay heading)" }}</div>
+      {% if item.link_url %}<div class="small"><a href="{{ item.link_url }}" target="_blank" rel="noopener" class="text-decoration-none"><i class="bi bi-link-45deg"></i> linked</a></div>{% endif %}
+    </td>
+    <td class="small">
+      {% if item.has_video %}<span class="badge text-bg-dark"><i class="bi bi-play-circle me-1"></i>Video</span>
+      {% elif item.is_gif %}<span class="badge text-bg-info"><i class="bi bi-file-earmark-music me-1"></i>GIF</span>
+      {% else %}<span class="badge text-bg-secondary"><i class="bi bi-image me-1"></i>Image</span>{% endif %}
+    </td>
+    <td class="small">
+      {% if item.discount_label %}<span class="badge text-bg-danger">{{ item.discount_label }}</span>{% else %}<span class="text-muted">—</span>{% endif %}
+      {% if item.badge_text %}<div class="mt-1"><span class="badge text-bg-{{ item.badge_color }}">{{ item.badge_text }}</span></div>{% endif %}
+    </td>
+    <td class="small">
+      {{ item.start_date|date:"M j, Y H:i"|default:"immediately" }}<br>→ {{ item.end_date|date:"M j, Y H:i"|default:"no expiry" }}
+    </td>
+    <td class="small text-center">{{ item.display_order }}</td>
+    <td>
+      {% if item.pk in live_banner_ids %}<span class="badge text-bg-success"><i class="bi bi-broadcast me-1"></i>Live now</span>
+      {% elif item.is_active %}<span class="badge text-bg-warning">Scheduled / expired</span>
+      {% else %}<span class="badge text-bg-secondary">Deactivated</span>{% endif %}
+    </td>
+    <td class="text-end text-nowrap">
+      <a href="/admin-panel/banners/{{ item.pk }}/edit/" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></a>
+      <form method="post" action="/admin-panel/banners/{{ item.pk }}/toggle/" class="d-inline">
+        {% csrf_token %}
+        <button class="btn btn-sm {% if item.is_active %}btn-outline-warning{% else %}btn-outline-success{% endif %}" title="{% if item.is_active %}Deactivate{% else %}Activate{% endif %}">
+          <i class="bi bi-toggle-{% if item.is_active %}on{% else %}off{% endif %}"></i>
+        </button>
+      </form>
+      <form method="post" action="/admin-panel/banners/{{ item.pk }}/delete/" class="d-inline" onsubmit="return confirm('Delete banner slide {{ item.title|escapejs }}?');">
+        {% csrf_token %}<button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+      </form>
+    </td>
+  </tr>
+{% endblock %}
