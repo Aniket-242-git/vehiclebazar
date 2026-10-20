@@ -68,6 +68,7 @@ INSTALLED_APPS = [
     "apps.contacts",
     "apps.offers",
     "apps.dashboard",
+    "apps.visitors",
 ]
 
 MIDDLEWARE = [
@@ -199,13 +200,17 @@ OFFER_DISPLAY_STRATEGY = os.getenv("OFFER_DISPLAY_STRATEGY", "priority")
 # File upload validation (secure uploads)
 # ------------------------------------------------------------------
 MAX_UPLOAD_SIZE_MB = int(os.getenv("MAX_UPLOAD_SIZE_MB", "5"))
-ALLOWED_IMAGE_EXTENSIONS = {"jpg", "jpeg", "png", "webp"}
+ALLOWED_IMAGE_EXTENSIONS = {"jpg", "jpeg", "png", "webp", "gif"}
 # Magic-number signatures we accept for uploaded images.
 ALLOWED_IMAGE_MAGIC = {
     b"\xff\xd8\xff": "image/jpeg",
     b"\x89PNG\r\n\x1a\n": "image/png",
     b"RIFF": "image/webp",
+    b"GIF87a": "image/gif",
+    b"GIF89a": "image/gif",
 }
+# Homepage banner slides may carry bigger files (animated GIFs / short videos).
+MAX_BANNER_UPLOAD_SIZE_MB = int(os.getenv("MAX_BANNER_UPLOAD_SIZE_MB", "25"))
 
 # ------------------------------------------------------------------
 # Email service architecture

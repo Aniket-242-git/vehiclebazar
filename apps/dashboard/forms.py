@@ -11,7 +11,7 @@ from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 
 from apps.contacts.models import ContactRequest
-from apps.offers.models import Offer
+from apps.offers.models import BannerSlide, Offer
 from apps.vehicles.models import Brand, Category, Feature, Vehicle, VehicleImage
 
 
@@ -137,6 +137,19 @@ class AdminSplitDateTimeField(forms.SplitDateTimeField):
     )
 
 
+class OptionalAdminSplitDateTimeField(AdminSplitDateTimeField):
+    """Same as AdminSplitDateTimeField but may be left empty."""
+
+    required = False
+
+    def to_python(self, value):
+        result = super().to_python(value)
+        # SplitDateTimeField returns datetime.min when both inputs are blank.
+        if isinstance(result, type(result)) and getattr(result, "year", None) == 1:
+            return None
+        return result
+
+
 class OfferForm(BaseAdminForm):
     start_date = AdminSplitDateTimeField(label="Starts at")
     end_date = AdminSplitDateTimeField(label="Ends at")
@@ -159,6 +172,56 @@ class OfferForm(BaseAdminForm):
 
     def clean(self):
         cleaned = super().clean()
+        start, end = cleaned.get("start_date"), cleaned.get("end_date")
+        if start and end and end <= start:
+            raise ValidationError("End date/time must be after the start date/time.")
+        return cleaned
+
+
+# ----------------------------------------------------------------------
+# Homepage banner slides (dynamic carousel: image / GIF / video)
+# ----------------------------------------------------------------------
+class BannerSlideForm(BaseAdminForm):
+    start_date = OptionalAdminSplitDateTimeField(label="Show from (optional)", required=False)
+    end_date = OptionalAdminSplitDateTimeField(label="Show until (optional)", required=False)
+
+    class Meta:
+        model = BannerSlide
+        fields = [
+            "title",
+            "slide_type",
+            "image",
+            "video",
+            "badge_text",
+            "badge_color",
+            "discount_label",
+            "heading",
+            "subtext",
+            "cta_text",
+            "link_url",
+            "start_date",
+            "end_date",
+            "is_active",
+            "display_order",
+        ]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Both media fields are conditionally required (validated in clean()).
+        self.fields["image"].required = False
+        self.fields["video"].required = False
+        self.fields["image"].help_text = (
+            "JPG / PNG / WEBP / animated GIF – recommended 1600×600 px."
+        )
+        self.fields["video"].help_text = "MP4 / WebM – autoplayed muted & looping."
+
+    def clean(self):
+        cleaned = super().clean()
+        slide_type = cleaned.get("slide_type")
+        if slide_type == BannerSlide.SlideType.IMAGE and not cleaned.get("image"):
+            self.add_error("image", "Upload an image or GIF for an image slide.")
+        if slide_type == BannerSlide.SlideType.VIDEO and not cleaned.get("video"):
+            self.add_error("video", "Upload a video file for a video slide.")
         start, end = cleaned.get("start_date"), cleaned.get("end_date")
         if start and end and end <= start:
             raise ValidationError("End date/time must be after the start date/time.")

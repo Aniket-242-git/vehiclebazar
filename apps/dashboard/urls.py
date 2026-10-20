@@ -39,6 +39,12 @@ urlpatterns = [
     path("offers/<int:pk>/edit/", ev.offer_form, name="offer_edit"),
     path("offers/<int:pk>/delete/", ev.offer_delete, name="offer_delete"),
     path("offers/<int:pk>/toggle/", ev.offer_toggle, name="offer_toggle"),
+    # --- Homepage banner slides (dynamic carousel) -----------------------
+    path("banners/", ev.banner_list, name="banner_list"),
+    path("banners/add/", ev.banner_form, name="banner_add"),
+    path("banners/<int:pk>/edit/", ev.banner_form, name="banner_edit"),
+    path("banners/<int:pk>/delete/", ev.banner_delete, name="banner_delete"),
+    path("banners/<int:pk>/toggle/", ev.banner_toggle, name="banner_toggle"),
     # --- Admin accounts (profile / password / create another admin) ---------
     path("profile/", account_views.profile_view, name="admin_profile"),
     path(
@@ -57,4 +63,8 @@ urlpatterns = [
         dashboard_view.contact_request_update,
         name="contact_request_update",
     ),
+    # --- Visitor Analytics ----------------------------------------------
+    path("visitors/", dashboard_view.visitor_list, name="visitor_list"),
+    path("visitors/<int:pk>/delete/", dashboard_view.visitor_delete, name="visitor_delete"),
+    path("visitors/clear/", dashboard_view.visitor_clear, name="visitor_clear"),
 ]

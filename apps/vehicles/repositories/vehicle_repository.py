@@ -86,8 +86,16 @@ class VehicleRepository:
         location: str | None = None,
         status: str | None = None,
     ) -> QuerySet[Vehicle]:
+        def _valid(val: str | None) -> str | None:
+            if not val:
+                return None
+            s = str(val).strip()
+            return None if s.lower() in ("none", "null") else s
+
+        category = _valid(category)
         if category:
             qs = qs.filter(category__slug=category)
+        brand = _valid(brand)
         if brand:
             qs = qs.filter(brand__slug=brand)
         if min_price is not None:
@@ -96,12 +104,16 @@ class VehicleRepository:
             qs = qs.filter(price__lte=max_price)
         if year_from is not None:
             qs = qs.filter(manufacturing_year__gte=year_from)
+        fuel_type = _valid(fuel_type)
         if fuel_type:
             qs = qs.filter(fuel_type=fuel_type)
+        transmission = _valid(transmission)
         if transmission:
             qs = qs.filter(transmission=transmission)
+        location = _valid(location)
         if location:
             qs = qs.filter(location__icontains=location)
+        status = _valid(status)
         if status:
             qs = qs.filter(status=status)
         return qs

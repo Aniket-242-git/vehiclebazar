@@ -27,9 +27,39 @@
   /* ---------- 2. Auto-submit filter selects ---------- */
   var filterForm = document.getElementById("filterForm");
   if (filterForm) {
+    var cleanFormBeforeSubmit = function () {
+      filterForm.querySelectorAll("input, select").forEach(function (el) {
+        if (!el.name) return;
+        var val = (el.value || "").trim();
+        if (val === "" || val.toLowerCase() === "none" || val.toLowerCase() === "null") {
+          el.disabled = true;
+        }
+      });
+      setTimeout(function () {
+        filterForm.querySelectorAll("input, select").forEach(function (el) {
+          el.disabled = false;
+        });
+      }, 100);
+    };
+
+    filterForm.addEventListener("submit", function () {
+      cleanFormBeforeSubmit();
+    });
+
     filterForm.querySelectorAll("select").forEach(function (sel) {
       sel.addEventListener("change", function () {
-        filterForm.submit();
+        if (typeof filterForm.requestSubmit === "function") {
+          filterForm.requestSubmit();
+        } else {
+          cleanFormBeforeSubmit();
+          filterForm.submit();
+        }
+      });
+    });
+
+    window.addEventListener("pageshow", function () {
+      filterForm.querySelectorAll("input, select").forEach(function (el) {
+        el.disabled = false;
       });
     });
   }

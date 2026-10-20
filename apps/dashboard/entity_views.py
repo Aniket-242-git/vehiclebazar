@@ -14,6 +14,7 @@ from django.views.decorators.http import require_POST
 
 from apps.dashboard import crud
 from apps.dashboard.forms import (
+    BannerSlideForm,
     BrandForm,
     CategoryForm,
     FeatureForm,
@@ -22,8 +23,8 @@ from apps.dashboard.forms import (
     VehicleImageForm,
 )
 from apps.dashboard.views.dashboard_view import staff_required
-from apps.offers.models import Offer
-from apps.offers.services import OfferService
+from apps.offers.models import BannerSlide, Offer
+from apps.offers.services import BannerService, OfferService
 from apps.vehicles.models import (
     Brand,
     Category,
@@ -327,6 +328,73 @@ def vehicle_image_primary(request, pk):
     img.save()  # model save() demotes other primaries automatically
     messages.success(request, "Primary image updated.")
     return redirect("vehicle_update", pk=img.vehicle_id)
+
+
+# ======================================================================
+# Homepage banner slides (dynamic carousel: image / GIF / video)
+# ======================================================================
+@login_required
+@staff_required
+def banner_list(request):
+    live_ids = {s.id for s in BannerService.live_slides(limit=100)}
+
+    return crud.crud_list(
+        request,
+        queryset=BannerSlide.objects.all(),
+        template_name="admin_panel/banner_list.html",
+        page_meta={"active_nav": "banners", "page_title": "Homepage Banners", "nav_icon": "images",
+                   "singular": "Banner Slide", "add_url": "/admin-panel/banners/add/"},
+        search_fields=["title", "heading", "slug"],
+        paginate_by=20,
+        order_choices={
+            "order": ("display_order", "-created_at"),
+            "newest": ("-created_at",),
+            "oldest": ("created_at",),
+        },
+        default_order=("display_order", "-created_at"),
+        extra_context=lambda req: {"live_banner_ids": live_ids},
+    )
+
+
+@login_required
+@staff_required
+def banner_form(request, pk=None):
+    instance = get_object_or_404(BannerSlide, pk=pk) if pk else None
+    return crud.crud_form(
+        request,
+        form_class=BannerSlideForm,
+        instance=instance,
+        template_name="admin_panel/model_form.html",
+        page_meta={"page_title": ("Edit Banner Slide" if instance else "Add Banner Slide"),
+                   "nav_icon": "images", "list_url": "/admin-panel/banners/", "list_label": "Homepage Banners",
+                   "half_width": ["title", "slide_type", "badge_text", "badge_color", "discount_label",
+                                  "cta_text", "start_date", "end_date", "display_order"]},
+        success_url_name="banner_list",
+        success_message="Banner slide “%s” saved.",
+    )
+
+
+@login_required
+@staff_required
+@require_POST
+def banner_delete(request, pk):
+    return crud.crud_delete(
+        request, model=BannerSlide, pk=pk,
+        success_url_name="banner_list",
+        success_message="Banner slide “%s” deleted.",
+    )
+
+
+@login_required
+@staff_required
+@require_POST
+def banner_toggle(request, pk):
+    slide = get_object_or_404(BannerSlide, pk=pk)
+    slide.is_active = not slide.is_active
+    slide.save(update_fields=["is_active", "updated_at"])
+    state = "activated" if slide.is_active else "deactivated"
+    messages.success(request, f"Banner slide {state}.")
+    return redirect("banner_list")
 
 
 # ======================================================================

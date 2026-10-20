@@ -1,0 +1,43 @@
+{% load static %}
+{# Demo vehicle card – same look as components/vehicle_card.html but for dict data #}
+<div class="card h-100 shadow-sm vehicle-card border-0">
+  <a href="{{ vehicle.url }}" class="text-decoration-none">
+    <div class="position-relative overflow-hidden rounded-top">
+      <img src="{{ vehicle.image }}" alt="{{ vehicle.title }}"
+           class="card-img-top vehicle-thumb" loading="lazy">
+      {% if vehicle.offer_price %}
+        <span class="badge text-bg-danger position-absolute top-0 start-0 m-2 discount-corner">
+          -{{ vehicle.discount_pct|default:"10" }}%
+        </span>
+      {% endif %}
+      {% if vehicle.badge %}
+        <span class="badge text-bg-warning position-absolute bottom-0 start-0 m-2"><i class="bi bi-star-fill"></i> {{ vehicle.badge }}</span>
+      {% endif %}
+    </div>
+  </a>
+  <div class="card-body">
+    <h6 class="card-title mb-1 text-truncate">
+      <a class="text-decoration-none text-dark" href="{{ vehicle.url }}">{{ vehicle.title }}</a>
+    </h6>
+    <p class="text-secondary small mb-2">
+      {{ vehicle.brand_name }} · {{ vehicle.category_name }} · {{ vehicle.manufacturing_year }}
+    </p>
+    <div class="d-flex flex-wrap gap-2 small text-secondary mb-2">
+      <span><i class="bi bi-speedometer2"></i> {{ vehicle.km_driven|floatformat:"g" }} km</span>
+      <span><i class="bi bi-fuel-pump"></i> {{ vehicle.fuel_display }}</span>
+      <span><i class="bi bi-gear"></i> {{ vehicle.transmission_display }}</span>
+    </div>
+    <p class="small text-secondary mb-2"><i class="bi bi-geo-alt"></i> {{ vehicle.location }}</p>
+    <div class="d-flex justify-content-between align-items-center mt-auto">
+      <div>
+        {% if vehicle.offer_price %}
+          <span class="fs-5 fw-bold text-success">₹{{ vehicle.offer_price|floatformat:"g" }}</span>
+          <s class="small text-secondary">₹{{ vehicle.price|floatformat:"g" }}</s>
+        {% else %}
+          <span class="fs-5 fw-bold text-primary">₹{{ vehicle.price|floatformat:"g" }}</span>
+        {% endif %}
+      </div>
+      <a href="{{ vehicle.url }}" class="btn btn-sm btn-outline-primary">View Details</a>
+    </div>
+  </div>
+</div>
