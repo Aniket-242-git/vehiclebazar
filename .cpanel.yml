@@ -1,0 +1,11 @@
+
+---
+deployment:
+  tasks:
+    - export DEPLOYPATH=/home/gktzsdbd/vehiclebazar.ankitweb.shop/vehiclebazar
+    - /bin/cp -R apps "$DEPLOYPATH/"
+    - /bin/cp -R config "$DEPLOYPATH/"
+    - /bin/cp -R templates "$DEPLOYPATH/"
+    - /bin/cp -R static "$DEPLOYPATH/"
+    - /bin/cp manage.py "$DEPLOYPATH/"
+    - /bin/cp requirements.txt "$DEPLOYPATH/"
