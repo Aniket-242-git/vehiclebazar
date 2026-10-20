@@ -117,7 +117,7 @@
             <div class="mb-3">
               <label class="form-label small fw-semibold">Location</label>
               <input type="text" name="location" class="form-control form-control-sm"
-                     value="{{ params.location }}" placeholder="e.g. Pune">
+                     value="{{ params.location|default:'' }}" placeholder="e.g. Pune">
             </div>
 
             {% if show_status_filter %}
@@ -151,7 +151,7 @@
         <div class="btn-group btn-group-sm flex-wrap" role="group" aria-label="Sort vehicles">
           {% for value, label in sort_choices %}
             <a class="btn {% if params.sort == value %}btn-dark{% else %}btn-outline-secondary{% endif %}"
-               href="?{{ querystring }}{% if querystring %}&{% endif %}sort={{ value }}">{{ label }}</a>
+               href="?{{ sort_querystring }}{% if sort_querystring %}&{% endif %}sort={{ value }}">{{ label }}</a>
           {% endfor %}
         </div>
       </div>

@@ -41,14 +41,27 @@ class VehicleService:
     # ------------------------------------------------------------------
     @classmethod
     def parse_params(cls, querydict) -> VehicleListParams:
-        params = VehicleListParams(q=querydict.get("q", "").strip())
+        q_raw = querydict.get("q", "").strip()
+        params = VehicleListParams(q="" if q_raw.lower() in ("none", "null") else q_raw)
+
+        def _str(name: str) -> Optional[str]:
+            raw = querydict.get(name)
+            if raw in (None, ""):
+                return None
+            cleaned = str(raw).strip()
+            if not cleaned or cleaned.lower() in ("none", "null"):
+                return None
+            return cleaned
 
         def _dec(name: str) -> Optional[Decimal]:
             raw = querydict.get(name)
             if raw in (None, ""):
                 return None
+            cleaned = str(raw).strip()
+            if not cleaned or cleaned.lower() in ("none", "null"):
+                return None
             try:
-                return Decimal(str(raw))
+                return Decimal(cleaned)
             except InvalidOperation:
                 params.errors[name] = "Enter a valid number."
                 return None
@@ -57,22 +70,25 @@ class VehicleService:
             raw = querydict.get(name)
             if raw in (None, ""):
                 return None
+            cleaned = str(raw).strip()
+            if not cleaned or cleaned.lower() in ("none", "null"):
+                return None
             try:
-                return int(raw)
+                return int(cleaned)
             except (TypeError, ValueError):
                 params.errors[name] = "Enter a valid integer."
                 return None
 
-        params.category = querydict.get("category") or None
-        params.brand = querydict.get("brand") or None
+        params.category = _str("category")
+        params.brand = _str("brand")
         params.min_price = _dec("min_price")
         params.max_price = _dec("max_price")
         params.year_from = _int("year_from")
-        params.fuel_type = querydict.get("fuel_type") or None
-        params.transmission = querydict.get("transmission") or None
-        params.location = querydict.get("location") or None
-        params.status = querydict.get("status") or None
-        params.sort = querydict.get("sort") or "latest"
+        params.fuel_type = _str("fuel_type")
+        params.transmission = _str("transmission")
+        params.location = _str("location")
+        params.status = _str("status")
+        params.sort = _str("sort") or "latest"
         params.page = _int("page") or 1
         params.page_size = _int("page_size") or 12
         return params

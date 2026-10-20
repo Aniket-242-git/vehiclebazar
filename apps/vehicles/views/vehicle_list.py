@@ -76,30 +76,41 @@ def vehicle_list(request):
     ).order_by("name")
     brands = Brand.objects.filter(is_active=True).order_by("name")
 
+    active_category = None
+    if params.category:
+        active_category = next((c for c in categories if c.slug == params.category), None)
+        if not active_category:
+            active_category = Category.objects.filter(slug=params.category).first()
+
     context = {
         "vehicles": object_list,
         "page_obj": page_obj,
         "params": params,
         "categories": categories,
         "brands": brands,
+        "active_category": active_category,
         "status_choices": VehicleStatus.choices,
         "fuel_choices": FuelType.choices,
         "transmission_choices": Transmission.choices,
         "sort_choices": SORT_CHOICES,
         "total_count": page_obj.paginator.count if page_obj else 0,
         "querystring": _qs_without(request.GET, ["page"]),
+        "sort_querystring": _qs_without(request.GET, ["page", "sort"]),
     }
     return render(request, "public/vehicle_list.html", context)
 
 
 def _qs_without(querydict, drop: list[str]) -> str:
-    """Rebuild a query string without given keys (for pagination links)."""
-    items = [
-        (k, v)
-        for k in querydict
-        for v in querydict.getlist(k)
-        if k not in drop
-    ]
+    """Rebuild a query string without given keys, omitting empty, 'None', and 'null' values."""
+    items = []
+    for k in querydict:
+        if k in drop:
+            continue
+        for v in querydict.getlist(k):
+            val = str(v).strip()
+            if not val or val.lower() in ("none", "null"):
+                continue
+            items.append((k, val))
     from urllib.parse import urlencode
 
     return urlencode(items)
