@@ -1,0 +1,206 @@
+
+name: Deploy VehicleBazar to cPanel
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: vehiclebazar-production-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure pinned SSH
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.CPANEL_SSH_KEY }}
+          SSH_HOST: ${{ secrets.CPANEL_HOST }}
+          SSH_PORT: ${{ secrets.CPANEL_PORT }}
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+
+          EXPECTED="SHA256:wH2SO6Kwaw6zuSaCGTispsASasapuNE7Jw2frcSTKUE"
+          ssh-keyscan -p "$SSH_PORT" "$SSH_HOST" \
+            > /tmp/hostkeys 2>/dev/null
+
+          : > ~/.ssh/known_hosts
+          while IFS= read -r line; do
+            printf '%s\n' "$line" > /tmp/one-hostkey
+            FP="$(ssh-keygen -lf /tmp/one-hostkey -E sha256 |
+              awk '{print $2}')"
+            if [[ "$FP" == "$EXPECTED" ]]; then
+              printf '%s\n' "$line" >> ~/.ssh/known_hosts
+            fi
+          done < /tmp/hostkeys
+
+          test -s ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+          rm -f /tmp/hostkeys /tmp/one-hostkey
+
+      - name: Test SSH authentication
+        env:
+          SSH_HOST: ${{ secrets.CPANEL_HOST }}
+          SSH_PORT: ${{ secrets.CPANEL_PORT }}
+          SSH_USER: ${{ secrets.CPANEL_USER }}
+        run: |
+          set -euo pipefail
+          ssh -i ~/.ssh/deploy_key \
+            -o UserKnownHostsFile=~/.ssh/known_hosts \
+            -o StrictHostKeyChecking=yes \
+            -o BatchMode=yes \
+            -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" \
+            "printf 'SSH authentication successful\n'"
+
+      - name: Identify eligible changed files
+        id: changes
+        env:
+          BEFORE: ${{ github.event.before }}
+          AFTER: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+
+          if [[ "$BEFORE" =~ ^0+$ ]]; then
+            echo "Initial deployment refused."
+            exit 1
+          fi
+
+          git diff --name-only --diff-filter=ACMRT \
+            "$BEFORE" "$AFTER" > /tmp/all-changed.txt
+
+          grep -Ev \
+            '(^|/)\.env([^/]*|$)|(^|/)db\.sqlite3$|(^|/)(media|logs|staticfiles|\.git|venv|\.venv|__pycache__)(/|$)|^config/settings/|^requirements\.txt$|^\.cpanel\.yml$|^\.github/|(^|/)passenger_wsgi\.py$|\.pyc$' \
+            /tmp/all-changed.txt > /tmp/candidates.txt || true
+
+          : > /tmp/deploy-files.txt
+          while IFS= read -r file; do
+            [[ -n "$file" ]] || continue
+            [[ "$file" != /* && "$file" != *".."* ]] || continue
+            [[ -f "$file" && ! -L "$file" ]] || continue
+            printf '%s\n' "$file" >> /tmp/deploy-files.txt
+          done < /tmp/candidates.txt
+
+          if [[ -s /tmp/deploy-files.txt ]]; then
+            echo "Files selected for deployment:"
+            cat /tmp/deploy-files.txt
+            echo "has_files=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "No eligible files to deploy."
+            echo "has_files=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Package changed files
+        if: steps.changes.outputs.has_files == 'true'
+        run: |
+          set -euo pipefail
+          tar -czf /tmp/vehiclebazar-deploy.tgz \
+            -T /tmp/deploy-files.txt
+          tar -tzf /tmp/vehiclebazar-deploy.tgz
+
+      - name: Upload, back up and deploy
+        if: steps.changes.outputs.has_files == 'true'
+        env:
+          SSH_HOST: ${{ secrets.CPANEL_HOST }}
+          SSH_PORT: ${{ secrets.CPANEL_PORT }}
+          SSH_USER: ${{ secrets.CPANEL_USER }}
+          APP_PATH: ${{ secrets.CPANEL_APP_PATH }}
+          AFTER: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+
+          scp -i ~/.ssh/deploy_key \
+            -o UserKnownHostsFile=~/.ssh/known_hosts \
+            -o StrictHostKeyChecking=yes \
+            -P "$SSH_PORT" /tmp/vehiclebazar-deploy.tgz \
+            "$SSH_USER@$SSH_HOST:$APP_PATH/.vehiclebazar-deploy.tgz"
+
+          ssh -i ~/.ssh/deploy_key \
+            -o UserKnownHostsFile=~/.ssh/known_hosts \
+            -o StrictHostKeyChecking=yes \
+            -p "$SSH_PORT" "$SSH_USER@$SSH_HOST" \
+            "APP_PATH='$APP_PATH' AFTER='$AFTER' bash -s" <<'REMOTE'
+          set -euo pipefail
+          APP_PATH="${APP_PATH:?}"
+          AFTER="${AFTER:?}"
+          ARCHIVE="$APP_PATH/.vehiclebazar-deploy.tgz"
+          STAGE="$HOME/vehiclebazar-staging/$AFTER"
+          BACKUP="$HOME/vehiclebazar-backups/$AFTER"
+          LIST="$HOME/.vehiclebazar-files-$AFTER"
+
+          mkdir -p "$STAGE" "$BACKUP"
+          tar -tzf "$ARCHIVE" > "$LIST"
+
+          # Validate archive paths before extracting outside the live app.
+          while IFS= read -r file; do
+            [[ -n "$file" ]] || continue
+            [[ "$file" != /* && "$file" != *".."* ]] || {
+              echo "Unsafe archive path rejected."
+              exit 1
+            }
+          done < "$LIST"
+
+          tar -xzf "$ARCHIVE" -C "$STAGE"
+
+          mapfile -t files < "$LIST"
+          for file in "${files[@]}"; do
+            [[ -f "$STAGE/$file" && ! -L "$STAGE/$file" ]] || {
+              echo "Unexpected archive entry rejected."
+              exit 1
+            }
+          done
+
+          rollback() {
+            echo "Deployment failed; restoring backed-up files."
+            for file in "${files[@]}"; do
+              if [[ -f "$BACKUP/$file" ]]; then
+                mkdir -p "$APP_PATH/$(dirname "$file")"
+                cp -p "$BACKUP/$file" "$APP_PATH/$file" || true
+              else
+                rm -f "$APP_PATH/$file" || true
+              fi
+            done
+          }
+          trap rollback ERR
+
+          for file in "${files[@]}"; do
+            target="$APP_PATH/$file"
+            if [[ -L "$target" ]]; then
+              echo "Refusing to overwrite a symlink."
+              exit 1
+            fi
+            if [[ -e "$target" && ! -f "$target" ]]; then
+              echo "Refusing to overwrite a non-file target."
+              exit 1
+            fi
+            if [[ -f "$target" ]]; then
+              mkdir -p "$BACKUP/$(dirname "$file")"
+              cp -p "$target" "$BACKUP/$file"
+            fi
+            mkdir -p "$(dirname "$target")"
+            cp -p "$STAGE/$file" "$target"
+          done
+
+          touch /home/gktzsdbd/vehiclebazar.ankitweb.shop/tmp/restart.txt
+          trap - ERR
+          rm -f "$ARCHIVE" "$LIST"
+          rm -rf "$STAGE"
+          echo "Deployment files transferred and Passenger restart requested."
+          REMOTE
+
+      - name: Clean up SSH key
+        if: always()
+        run: rm -f ~/.ssh/deploy_key
